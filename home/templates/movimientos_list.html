@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-white flex items-center">
+        <i class="fas fa-exchange-alt text-olive-500 mr-3"></i> Movimientos
+      </h1>
+      <p class="text-gray-400 mt-1">Producto: <span class="text-white font-semibold">{{ producto.nombre }}</span> (SKU: {{ producto.sku }}) — Stock actual: <span class="text-olive-400 font-bold">{{ producto.stock }}</span></p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{% url 'add_entrada' producto.id %}" class="inline-flex items-center space-x-2 bg-green-700 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-lg">
+        <i class="fas fa-arrow-down"></i><span>Nueva entrada</span>
+      </a>
+      <a href="{% url 'add_salida' producto.id %}" class="inline-flex items-center space-x-2 bg-yellow-700 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded-lg">
+        <i class="fas fa-arrow-up"></i><span>Nueva salida</span>
+      </a>
+      <a href="{% url 'list_productos' %}" class="inline-flex items-center space-x-2 bg-dark-700 text-gray-300 px-4 py-2 rounded-lg">
+        <i class="fas fa-arrow-left"></i><span>Volver</span>
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}{% for m in messages %}
+    <div class="p-4 rounded-lg {% if m.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %}">{{ m }}</div>
+  {% endfor %}{% endif %}
+
+  <div class="bg-dark-800 border border-dark-700 rounded-xl overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-dark-900 text-olive-400">
+        <tr>
+          <th class="px-4 py-3 text-left">Fecha</th>
+          <th class="px-4 py-3 text-left">Tipo</th>
+          <th class="px-4 py-3 text-right">Cantidad</th>
+          <th class="px-4 py-3 text-left">Motivo / Factura</th>
+          <th class="px-4 py-3 text-left">Proveedor</th>
+          <th class="px-4 py-3 text-left">Usuario</th>
+          <th class="px-4 py-3 text-left">Notas</th>
+          <th class="px-4 py-3 text-center">PDF</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for mov in movimientos %}
+        <tr class="border-t border-dark-700 hover:bg-dark-700/50">
+          <td class="px-4 py-3 text-gray-300">{{ mov.fecha|date:"d/m/Y H:i" }}</td>
+          <td class="px-4 py-3">
+            {% if mov.tipo == 'Entrada' %}
+              <span class="px-2 py-0.5 rounded-full bg-green-700/30 text-green-400 text-xs font-semibold">Entrada</span>
+            {% elif mov.tipo == 'Descuento' %}
+              <span class="px-2 py-0.5 rounded-full bg-pink-700/30 text-pink-400 text-xs font-semibold">Descuento</span>
+            {% else %}
+              <span class="px-2 py-0.5 rounded-full bg-red-700/30 text-red-400 text-xs font-semibold">Salida</span>
+            {% endif %}
+            {% if mov.descuento_porcentaje > 0 and mov.tipo != 'Descuento' %}
+              <span class="px-2 py-0.5 rounded-full bg-pink-700/30 text-pink-400 text-xs ml-1">-{{ mov.descuento_porcentaje }}%</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-right font-semibold">
+            {% if mov.tipo == 'Entrada' %}<span class="text-green-400">+{{ mov.cantidad }}</span>
+            {% elif mov.tipo == 'Salida' %}<span class="text-red-400">-{{ mov.cantidad }}</span>
+            {% else %}<span class="text-gray-400">—</span>{% endif %}
+          </td>
+          <td class="px-4 py-3 text-gray-300">
+            {% if mov.tipo == 'Entrada' and mov.numero_factura %}
+              Fact. {{ mov.numero_factura }}{% if mov.nombre_factura %} — {{ mov.nombre_factura }}{% endif %}
+              {% if mov.pago_pendiente %}<span class="text-yellow-400 text-xs ml-1">(Pago pendiente)</span>{% endif %}
+            {% elif mov.motivo %}{{ mov.motivo }}
+            {% elif mov.tipo == 'Descuento' and mov.descuento_porcentaje %}Descuento {{ mov.descuento_porcentaje }}%
+            {% else %}—{% endif %}
+          </td>
+          <td class="px-4 py-3 text-gray-300">{% if mov.proveedor %}{{ mov.proveedor }}{% if mov.nit_proveedor %} (NIT: {{ mov.nit_proveedor }}){% endif %}{% else %}—{% endif %}</td>
+          <td class="px-4 py-3 text-gray-300">{{ mov.usuario.nombre|default:mov.usuario.user|default:"—" }}</td>
+          <td class="px-4 py-3 text-gray-400 text-xs">{{ mov.notas|truncatechars:60|default:"—" }}</td>
+          <td class="px-4 py-3 text-center">
+            {% if mov.tipo == 'Entrada' %}
+              <a href="{% url 'entrada_pdf' mov.id %}" target="_blank"
+                 class="text-red-400 hover:text-red-300 text-sm" title="Ver PDF comprobante">
+                <i class="fas fa-file-pdf"></i>
+              </a>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">Sin movimientos registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,363 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <!-- Breadcrumb -->
+  <div class="flex items-center space-x-2 text-sm text-gray-400">
+    <a href="{% url 'list_pacientes' %}" class="hover:text-olive-400 transition-colors">
+      <i class="fas fa-paw mr-1"></i>Mis Mascotas
+    </a>
+    <i class="fas fa-chevron-right text-xs"></i>
+    <span class="text-white">{% if action == 'Add' %}Agregar{% else %}Editar{% endif %} Mascota</span>
+  </div>
+
+  <!-- Header -->
+  <div class="flex items-center space-x-4">
+    <div class="w-16 h-16 bg-gradient-to-br from-olive-700 to-olive-600 rounded-xl flex items-center justify-center shadow-lg">
+      <i class="fas {% if action == 'Add' %}fa-plus{% else %}fa-edit{% endif %} text-white text-2xl"></i>
+    </div>
+    <div>
+      <h1 class="text-3xl font-bold text-white">
+        {% if action == 'Add' %}Agregar Mascota{% else %}Editar Mascota{% endif %}
+      </h1>
+      <p class="text-gray-400">
+        {% if action == 'Add' %}Registra una nueva mascota{% else %}Actualiza la información de la mascota{% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %} flex items-center animate-fade-in">
+        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-3 text-xl"></i>
+        <span>{{ message }}</span>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data" class="grid lg:grid-cols-3 gap-6">
+    {% csrf_token %}
+
+    <div class="lg:col-span-2 space-y-6">
+
+      <!-- Foto de perfil -->
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+        <div class="flex items-center space-x-3 mb-6">
+          <div class="w-12 h-12 bg-gradient-to-br from-pink-700 to-purple-700 rounded-lg flex items-center justify-center">
+            <i class="fas fa-camera text-white text-xl"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-white">Foto de la mascota</h2>
+            <p class="text-sm text-gray-400">Sube una foto de tu mascota</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row items-center gap-6">
+          <div class="flex-shrink-0">
+            <div class="relative">
+              <div id="profilePicturePreview" class="w-32 h-32 rounded-full overflow-hidden border-4 border-dark-600 shadow-xl">
+                {% if paciente.profile_picture %}
+                  <img src="{{ paciente.profile_picture }}" alt="Mascota" class="w-full h-full object-cover">
+                {% else %}
+                  <div class="w-full h-full bg-gradient-to-br from-olive-600 to-olive-700 flex items-center justify-center">
+                    <i class="fas fa-paw text-white text-4xl"></i>
+                  </div>
+                {% endif %}
+              </div>
+              <div class="absolute bottom-0 right-0 w-10 h-10 bg-olive-600 hover:bg-olive-500 rounded-full border-4 border-dark-800 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110"
+                   onclick="document.getElementById('profile_picture').click()">
+                <i class="fas fa-camera text-white text-sm"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-1 w-full">
+            <input type="file" id="profile_picture" name="profile_picture" accept="image/*" class="hidden" onchange="previewImage(event)">
+            <div class="space-y-3">
+              <button type="button" onclick="document.getElementById('profile_picture').click()"
+                      class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-olive-700 to-olive-600
+                             hover:from-olive-600 hover:to-olive-500 text-white rounded-lg
+                             transition-all duration-300 shadow-lg font-medium
+                             transform hover:scale-105 inline-flex items-center justify-center space-x-2">
+                <i class="fas fa-upload"></i>
+                <span>Elegir foto</span>
+              </button>
+              <div id="fileInfo" class="hidden">
+                <div class="flex items-center space-x-2 text-sm text-gray-400">
+                  <i class="fas fa-file-image text-olive-400"></i>
+                  <span id="fileName"></span>
+                  <button type="button" onclick="clearFileInput()" class="text-red-400 hover:text-red-300 ml-2">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="text-xs text-gray-500 space-y-1">
+                <p><i class="fas fa-info-circle mr-1 text-blue-400"></i>Tamaño máximo: 5 MB</p>
+                <p><i class="fas fa-check-circle mr-1 text-green-400"></i>Formatos: JPG, PNG, GIF</p>
+              </div>
+              {% if paciente.profile_picture %}
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" name="remove_profile_picture" value="true"
+                       class="w-4 h-4 text-red-600 bg-dark-900 border-dark-600 rounded focus:ring-red-500 focus:ring-2">
+                <span class="text-sm text-red-400 hover:text-red-300">
+                  <i class="fas fa-trash-alt mr-1"></i>Eliminar foto actual
+                </span>
+              </label>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información básica -->
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-8 shadow-xl">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center border-b border-dark-600 pb-2">
+          <i class="fas fa-paw text-olive-500 mr-2"></i>Información básica
+        </h3>
+        <div class="space-y-4">
+
+          <!-- Nombre -->
+          <div class="group">
+            <label class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-tag text-olive-500 mr-2"></i>Nombre *
+            </label>
+            <input type="text" name="nombre" value="{{ paciente.nombre }}" required
+                   placeholder="Ej: Max, Luna, Simba"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                          focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                          transition-all duration-300 group-hover:border-olive-700"
+                   oninput="updatePreview()">
+          </div>
+
+          <!-- Especie -->
+          <div class="group">
+            <label class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-paw text-olive-500 mr-2"></i>Especie *
+            </label>
+            <select name="especie" required
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                           focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                           transition-all duration-300 group-hover:border-olive-700"
+                    onchange="updateBreedOptions(this.value); updatePreview();">
+              <option value="">Selecciona una especie...</option>
+              <option value="Perro"    {% if paciente.especie == 'Perro'    %}selected{% endif %}>🐕 Perro</option>
+              <option value="Gato"     {% if paciente.especie == 'Gato'     %}selected{% endif %}>🐈 Gato</option>
+              <option value="Conejo"   {% if paciente.especie == 'Conejo'   %}selected{% endif %}>🐰 Conejo</option>
+              <option value="Hámster"  {% if paciente.especie == 'Hámster'  %}selected{% endif %}>🐹 Hámster</option>
+              <option value="Ave"      {% if paciente.especie == 'Ave'      %}selected{% endif %}>🦜 Ave</option>
+              <option value="Reptil"   {% if paciente.especie == 'Reptil'   %}selected{% endif %}>🦎 Reptil</option>
+              <option value="Otro"     {% if paciente.especie == 'Otro'     %}selected{% endif %}>🐾 Otro</option>
+              <!-- Legacy English values -->
+              <option value="Dog"      {% if paciente.especie == 'Dog'      %}selected{% endif %} style="display:none">Dog</option>
+              <option value="Cat"      {% if paciente.especie == 'Cat'      %}selected{% endif %} style="display:none">Cat</option>
+              <option value="Rabbit"   {% if paciente.especie == 'Rabbit'   %}selected{% endif %} style="display:none">Rabbit</option>
+              <option value="Bird"     {% if paciente.especie == 'Bird'     %}selected{% endif %} style="display:none">Bird</option>
+              <option value="Other"    {% if paciente.especie == 'Other'    %}selected{% endif %} style="display:none">Other</option>
+            </select>
+          </div>
+
+          <!-- Raza -->
+          <div class="group">
+            <label class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-bone text-olive-500 mr-2"></i>Raza *
+            </label>
+            <input type="text" name="raza" id="razaInput" value="{{ paciente.raza }}" required
+                   placeholder="Ej: Labrador, Persa, Criollo"
+                   list="breedOptions"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                          focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                          transition-all duration-300 group-hover:border-olive-700"
+                   oninput="updatePreview()">
+            <datalist id="breedOptions">
+              <option value="Criollo / Mestizo">
+              <option value="Desconocido">
+            </datalist>
+          </div>
+
+          <!-- Sexo (nuevo campo) -->
+          <div class="group">
+            <label class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-venus-mars text-olive-500 mr-2"></i>Sexo
+            </label>
+            <select name="sexo"
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                           focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                           transition-all duration-300 group-hover:border-olive-700">
+              <option value="Desconocido" {% if paciente.sexo == 'Desconocido' or not paciente.sexo %}selected{% endif %}>❓ Desconocido</option>
+              <option value="Macho"   {% if paciente.sexo == 'Macho'   %}selected{% endif %}>♂️ Macho</option>
+              <option value="Hembra"  {% if paciente.sexo == 'Hembra'  %}selected{% endif %}>♀️ Hembra</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Datos del propietario -->
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-8 shadow-xl">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center border-b border-dark-600 pb-2">
+          <i class="fas fa-user text-olive-500 mr-2"></i>Datos del propietario
+        </h3>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-gray-300 mb-2 font-medium">Tipo de documento</label>
+            <select name="owner_tipo_documento"
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+              <option value="">Seleccione…</option>
+              {% for opt in tipo_doc_options %}
+                <option value="{{ opt.value }}" {% if paciente.owner_tipo_documento == opt.value %}selected{% endif %}>{{ opt.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-300 mb-2 font-medium">Cédula / RUT</label>
+            <input type="text" name="owner_documento" value="{{ paciente.owner_documento }}"
+                   placeholder="Número de documento"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+          </div>
+          <div>
+            <label class="block text-gray-300 mb-2 font-medium">Correo del dueño</label>
+            <input type="email" name="owner_email" value="{{ paciente.owner_email }}"
+                   placeholder="dueno@correo.com"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+          </div>
+          <div>
+            <label class="block text-gray-300 mb-2 font-medium">Teléfono</label>
+            <input type="text" name="owner_telefono" value="{{ paciente.owner_telefono }}"
+                   placeholder="Número de teléfono"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-gray-300 mb-2 font-medium">Dirección</label>
+            <input type="text" name="owner_direccion" value="{{ paciente.owner_direccion }}"
+                   placeholder="Dirección de residencia"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button type="submit"
+                class="flex-1 bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-600 hover:to-olive-500
+                       text-white font-semibold py-3 rounded-lg transform hover:scale-[1.02] active:scale-[0.98]
+                       transition-all duration-300 shadow-lg flex items-center justify-center">
+          <i class="fas {% if action == 'Add' %}fa-plus-circle{% else %}fa-save{% endif %} mr-2"></i>
+          {% if action == 'Add' %}Guardar Mascota{% else %}Actualizar Mascota{% endif %}
+        </button>
+        <a href="{% url 'list_pacientes' %}"
+           class="flex-1 bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white font-semibold py-3 rounded-lg
+                  transition-all duration-300 border border-dark-600 hover:border-dark-500 flex items-center justify-center">
+          <i class="fas fa-times mr-2"></i>Cancelar
+        </a>
+      </div>
+    </div>
+
+    <!-- Columna derecha — Vista previa -->
+    <div class="lg:col-span-1 space-y-6">
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl sticky top-6">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+          <i class="fas fa-eye text-olive-500 mr-2"></i>Vista previa
+        </h3>
+        <div class="bg-dark-900 border border-dark-600 rounded-lg p-4 text-center">
+          <div id="previewAvatar" class="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden border-2 border-olive-600">
+            {% if paciente.profile_picture %}
+              <img src="{{ paciente.profile_picture }}" class="w-full h-full object-cover" id="previewAvatarImg">
+            {% else %}
+              <div class="w-full h-full bg-gradient-to-br from-olive-700 to-olive-600 flex items-center justify-center">
+                <i class="fas fa-paw text-white text-2xl"></i>
+              </div>
+            {% endif %}
+          </div>
+          <p class="text-white font-bold text-lg" id="previewName">Nombre mascota</p>
+          <p class="text-gray-400 text-sm" id="previewSpecies">Especie</p>
+          <p class="text-gray-500 text-xs" id="previewBreed">Raza</p>
+        </div>
+      </div>
+
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+          <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>Consejos
+        </h3>
+        <div class="space-y-3 text-sm">
+          <div class="flex items-start space-x-2 text-gray-300">
+            <i class="fas fa-check-circle text-olive-500 mt-0.5"></i>
+            <p>Sube una foto clara de tu mascota</p>
+          </div>
+          <div class="flex items-start space-x-2 text-gray-300">
+            <i class="fas fa-check-circle text-olive-500 mt-0.5"></i>
+            <p>Usa el nombre con el que la llamas</p>
+          </div>
+          <div class="flex items-start space-x-2 text-gray-300">
+            <i class="fas fa-check-circle text-olive-500 mt-0.5"></i>
+            <p>Selecciona la especie correcta</p>
+          </div>
+          <div class="flex items-start space-x-2 text-gray-300">
+            <i class="fas fa-check-circle text-olive-500 mt-0.5"></i>
+            <p>Indica el sexo para un mejor cuidado</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  function previewImage(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('profilePicturePreview');
+    const previewAvatar = document.getElementById('previewAvatar');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { alert('El archivo debe ser menor a 5 MB'); event.target.value = ''; return; }
+      if (!file.type.startsWith('image/')) { alert('Selecciona un archivo de imagen'); event.target.value = ''; return; }
+      fileName.textContent = file.name;
+      fileInfo.classList.remove('hidden');
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+        previewAvatar.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function clearFileInput() {
+    document.getElementById('profile_picture').value = '';
+    document.getElementById('fileInfo').classList.add('hidden');
+    location.reload();
+  }
+
+  const breedsBySpecies = {
+    'Perro':   ['Labrador', 'Golden Retriever', 'Pastor Alemán', 'Beagle', 'Bulldog', 'Poodle', 'Chihuahua', 'Criollo / Mestizo'],
+    'Gato':    ['Persa', 'Siamés', 'Maine Coon', 'British Shorthair', 'Bengalí', 'Ragdoll', 'Criollo / Mestizo'],
+    'Conejo':  ['Holland Lop', 'Mini Rex', 'Holandés', 'Gigante de Flandes', 'Leonado', 'Criollo / Mestizo'],
+    'Ave':     ['Loro', 'Periquito', 'Cacatúa', 'Canario', 'Jilguero', 'Guacamayo'],
+    'Hámster': ['Sirio', 'Ruso Enano', 'Roborovski', 'Chino'],
+    'Reptil':  ['Iguana', 'Gecko', 'Tortuga', 'Serpiente', 'Camaleón'],
+    'Otro':    ['Criollo / Mestizo', 'Desconocido'],
+  };
+
+  function updateBreedOptions(species) {
+    const datalist = document.getElementById('breedOptions');
+    datalist.innerHTML = '';
+    const breeds = breedsBySpecies[species] || ['Criollo / Mestizo', 'Desconocido'];
+    breeds.forEach(b => { const o = document.createElement('option'); o.value = b; datalist.appendChild(o); });
+  }
+
+  function updatePreview() {
+    document.getElementById('previewName').textContent    = document.querySelector('input[name="nombre"]').value  || 'Nombre mascota';
+    document.getElementById('previewSpecies').textContent = document.querySelector('select[name="especie"]').value || 'Especie';
+    document.getElementById('previewBreed').textContent   = document.querySelector('input[name="raza"]').value    || 'Raza';
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const especieSelect = document.querySelector('select[name="especie"]');
+    if (especieSelect.value) updateBreedOptions(especieSelect.value);
+    updatePreview();
+  });
+</script>
+
+{% endblock %}

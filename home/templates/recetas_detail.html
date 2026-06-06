@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <h1 class="text-3xl font-bold text-white"><i class="fas fa-prescription text-olive-500 mr-2"></i> Receta {{ receta.numero }}</h1>
+    <div class="flex gap-2">
+      <a href="{% url 'receta_pdf' receta.id %}" target="_blank" class="px-4 py-2 rounded bg-blue-600 text-white"><i class="fas fa-file-pdf mr-1"></i> PDF</a>
+      <a href="{{ back_url|default:'/recetas/' }}" class="px-4 py-2 rounded bg-dark-700 text-white"><i class="fas fa-arrow-left mr-1"></i>Volver</a>
+    </div>
+  </div>
+
+  <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <p class="text-gray-400 text-sm">Paciente</p>
+      <p class="text-white text-lg">{{ receta.paciente.nombre }} ({{ receta.paciente.especie }})</p>
+      <p class="text-gray-300 text-sm">Propietario: {% if receta.paciente.propietario %}{{ receta.paciente.propietario.nombre|default:"—" }}{% elif receta.paciente.owner %}{{ receta.paciente.owner.nombre|default:receta.paciente.owner.user|default:"—" }}{% else %}—{% endif %}</p>
+    </div>
+    <div class="md:text-right">
+      <p class="text-gray-400 text-sm">Fecha</p>
+      <p class="text-white">{{ receta.fecha|date:"Y-m-d H:i" }}</p>
+      <p class="text-gray-400 text-sm mt-2">Vigencia</p>
+      <p class="text-white">{{ receta.vigencia_dias }} días</p>
+    </div>
+    {% if receta.veterinario %}
+    <div class="md:col-span-2">
+      <p class="text-gray-400 text-sm">Veterinario</p>
+      <p class="text-white">{{ receta.veterinario.nombre|default:receta.veterinario.user }} — {{ receta.veterinario.especialidad|default:"" }}</p>
+    </div>
+    {% endif %}
+    {% if receta.diagnostico %}
+    <div class="md:col-span-2">
+      <p class="text-gray-400 text-sm">Diagnóstico</p>
+      <p class="text-white">{{ receta.diagnostico }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="bg-dark-800 border border-dark-700 rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-dark-900 text-olive-400">
+        <tr><th class="px-4 py-3 text-left">Medicamento</th><th class="px-4 py-3 text-left">Dosis</th><th class="px-4 py-3 text-left">Vía</th><th class="px-4 py-3 text-left">Frecuencia</th><th class="px-4 py-3 text-left">Duración</th></tr>
+      </thead>
+      <tbody>
+        {% for it in receta.items.all %}
+        <tr class="border-t border-dark-700">
+          <td class="px-4 py-3 text-white">{{ it.medicamento }}{% if it.observaciones %}<div class="text-xs text-gray-400">{{ it.observaciones }}</div>{% endif %}</td>
+          <td class="px-4 py-3 text-gray-300">{{ it.dosis }}</td>
+          <td class="px-4 py-3 text-gray-300">{{ it.via }}</td>
+          <td class="px-4 py-3 text-gray-300">{{ it.frecuencia }}</td>
+          <td class="px-4 py-3 text-gray-300">{{ it.duracion }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if receta.indicaciones %}
+  <div class="bg-dark-800 border border-dark-700 rounded-xl p-6">
+    <p class="text-gray-400 text-sm">Indicaciones</p>
+    <p class="text-white whitespace-pre-line">{{ receta.indicaciones }}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

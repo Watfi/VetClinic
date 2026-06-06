@@ -1,0 +1,569 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="space-y-6 sm:space-y-8 max-w-7xl mx-auto px-4">
+  
+  <!-- Header con imagen de fondo - RESPONSIVE -->
+  <div class="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-olive-800 to-olive-600 p-4 sm:p-6 lg:p-8 shadow-2xl">
+    <div class="absolute inset-0 opacity-10">
+      <img src="https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=1200" 
+           class="w-full h-full object-cover" alt="Veterinary">
+    </div>
+    <div class="relative z-10">
+      <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
+        <div class="flex items-center mb-2 sm:mb-1">
+          <i class="fas fa-chart-pie mr-2 sm:mr-3 text-xl sm:text-2xl lg:text-3xl"></i>
+          <span>Panel de Control</span>
+        </div>
+        {% if rol == 'Administrador' %}
+          <span class="text-olive-200 text-base sm:text-xl lg:text-2xl block sm:inline sm:ml-2">Administrador</span>
+        {% elif rol == 'Veterinario' %}
+          <span class="text-olive-200 text-base sm:text-xl lg:text-2xl block sm:inline sm:ml-2">Veterinario</span>
+        {% else %}
+          <span class="text-olive-200 text-base sm:text-xl lg:text-2xl block sm:inline sm:ml-2">Portal del Cliente</span>
+        {% endif %}
+      </h1>
+      <p class="text-olive-100 text-sm sm:text-base">Bienvenido a Kane Agropet</p>
+    </div>
+  </div>
+
+  <!-- ========== DASHBOARD ADMINISTRADOR ========== -->
+  {% if rol == 'Administrador' %}
+    
+    <!-- Tarjetas de estadísticas principales - RESPONSIVE -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      
+      <!-- Total Users -->
+      <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700 
+                  hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-400 text-xs sm:text-sm font-medium mb-1 sm:mb-2 truncate">Usuarios Totales</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">{{ total_users }}</p>
+            <p class="text-olive-400 text-xs mt-1 sm:mt-2 truncate">
+              <i class="fas fa-arrow-up mr-1"></i>Activos
+            </p>
+          </div>
+          <div class="w-12 h-12 sm:w-16 sm:h-16 bg-olive-700 rounded-full flex items-center justify-center flex-shrink-0 ml-3">
+            <i class="fas fa-users text-white text-lg sm:text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Pets -->
+      <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700 
+                  hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-400 text-xs sm:text-sm font-medium mb-1 sm:mb-2 truncate">Mascotas Totales</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">{{ total_mascotas }}</p>
+            <p class="text-green-400 text-xs mt-1 sm:mt-2 truncate">
+              <i class="fas fa-paw mr-1"></i>Registradas
+            </p>
+          </div>
+          <div class="w-12 h-12 sm:w-16 sm:h-16 bg-green-700 rounded-full flex items-center justify-center flex-shrink-0 ml-3">
+            <i class="fas fa-dog text-white text-lg sm:text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Veterinarians -->
+      <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700 
+                  hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-400 text-xs sm:text-sm font-medium mb-1 sm:mb-2 truncate">Veterinarios</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">{{ total_veterinarios }}</p>
+            <p class="text-purple-400 text-xs mt-1 sm:mt-2 truncate">
+              <i class="fas fa-user-md mr-1"></i>Profesionales
+            </p>
+          </div>
+          <div class="w-12 h-12 sm:w-16 sm:h-16 bg-purple-700 rounded-full flex items-center justify-center flex-shrink-0 ml-3">
+            <i class="fas fa-stethoscope text-white text-lg sm:text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Appointments -->
+      <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700 
+                  hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-400 text-xs sm:text-sm font-medium mb-1 sm:mb-2 truncate">Citas</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">{{ total_citas }}</p>
+            <p class="text-blue-400 text-xs mt-1 sm:mt-2 truncate">
+              <i class="fas fa-calendar-check mr-1"></i>Programadas
+            </p>
+          </div>
+          <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-700 rounded-full flex items-center justify-center flex-shrink-0 ml-3">
+            <i class="fas fa-calendar-alt text-white text-lg sm:text-2xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado de citas - RESPONSIVE -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+      <div class="bg-gradient-to-br from-yellow-900/40 to-yellow-800/40 p-4 sm:p-6 rounded-xl shadow-xl border border-yellow-700/50
+                  backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          <div class="w-12 h-12 sm:w-14 sm:h-14 bg-yellow-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-clock text-white text-lg sm:text-2xl"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-yellow-300 text-xs sm:text-sm font-medium truncate">Pendientes</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">{{ citas_pendientes }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-green-900/40 to-green-800/40 p-4 sm:p-6 rounded-xl shadow-xl border border-green-700/50
+                  backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          <div class="w-12 h-12 sm:w-14 sm:h-14 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-check-circle text-white text-lg sm:text-2xl"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-green-300 text-xs sm:text-sm font-medium truncate">Completadas</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">{{ citas_completadas }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-red-900/40 to-red-800/40 p-4 sm:p-6 rounded-xl shadow-xl border border-red-700/50
+                  backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          <div class="w-12 h-12 sm:w-14 sm:h-14 bg-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-times-circle text-white text-lg sm:text-2xl"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-red-300 text-xs sm:text-sm font-medium truncate">Canceladas</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">{{ citas_canceladas }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos y estadísticas detalladas - RESPONSIVE -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      
+      <!-- Top Species -->
+      <div class="bg-dark-800 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700">
+        <div class="flex items-center mb-4 sm:mb-6">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 bg-olive-700 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+            <i class="fas fa-paw text-white text-sm sm:text-base"></i>
+          </div>
+          <h2 class="text-base sm:text-lg lg:text-xl font-bold text-white truncate">Top 5 Especies de Mascotas</h2>
+        </div>
+        
+        {% if especies_data %}
+          <div class="space-y-3 sm:space-y-4">
+            {% for item in especies_data %}
+              <div class="group">
+                <div class="flex justify-between mb-2">
+                  <span class="text-sm sm:text-base text-gray-300 font-medium group-hover:text-olive-400 transition-colors truncate mr-2">
+                    <i class="fas fa-bone text-olive-500 mr-1 sm:mr-2"></i>{{ item.especie }}
+                  </span>
+                  <span class="text-sm sm:text-base font-bold text-olive-400 flex-shrink-0">{{ item.cantidad }}</span>
+                </div>
+                <div class="w-full bg-dark-700 rounded-full h-2 sm:h-3 overflow-hidden">
+                  <div class="bg-gradient-to-r from-olive-600 to-olive-500 h-2 sm:h-3 rounded-full transition-all duration-500 
+                              group-hover:from-olive-500 group-hover:to-olive-400" 
+                       style="width: {{ item.cantidad|add:"0" }}%"></div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-gray-500 text-center py-8 text-sm">No hay datos disponibles</p>
+        {% endif %}
+      </div>
+
+      <!-- Citas de hoy (timeline) -->
+      <div class="bg-dark-800 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700">
+        <div class="flex items-center justify-between mb-4 sm:mb-6">
+          <div class="flex items-center min-w-0">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-700 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+              <i class="fas fa-calendar-day text-white text-sm sm:text-base"></i>
+            </div>
+            <h2 class="text-base sm:text-lg lg:text-xl font-bold text-white truncate">Citas de hoy</h2>
+          </div>
+          <span class="bg-blue-700/30 text-blue-300 border border-blue-700 px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0">
+            {{ citas_hoy_list|length }}
+          </span>
+        </div>
+
+        {% if citas_hoy_list %}
+          <div class="relative pl-4 space-y-3 max-h-80 overflow-y-auto pr-1">
+            <span class="absolute left-0 top-1 bottom-1 w-px bg-gradient-to-b from-olive-600 via-dark-600 to-transparent"></span>
+            {% for c in citas_hoy_list %}
+              <div class="relative flex items-start gap-3 p-3 bg-dark-900 rounded-lg border border-dark-700 hover:border-olive-600 transition-colors">
+                <span class="absolute -left-[5px] top-4 w-2.5 h-2.5 rounded-full
+                  {% if c.estado == 'Completada' %}bg-green-500
+                  {% elif c.estado == 'Cancelada' %}bg-red-500
+                  {% else %}bg-olive-500{% endif %} ring-2 ring-dark-800"></span>
+                <div class="text-center flex-shrink-0 w-14">
+                  <p class="text-olive-400 text-sm font-bold">{{ c.hora }}</p>
+                  <p class="text-gray-500 text-[10px] uppercase tracking-wider">{{ c.tipo|default:"Cita" }}</p>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-white truncate">
+                    <i class="fas fa-paw text-olive-500 mr-1"></i>{{ c.mascota }}
+                  </p>
+                  <p class="text-xs text-gray-400 truncate">{{ c.propietario }} · Dr. {{ c.veterinario }}</p>
+                </div>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0
+                  {% if c.estado == 'Completada' %}bg-green-700/30 text-green-400 border border-green-700
+                  {% elif c.estado == 'Cancelada' %}bg-red-700/30 text-red-400 border border-red-700
+                  {% else %}bg-yellow-700/30 text-yellow-400 border border-yellow-700{% endif %}">
+                  {{ c.estado }}
+                </span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-8">
+            <i class="fas fa-mug-hot text-gray-600 text-4xl mb-3"></i>
+            <p class="text-gray-500 text-sm mb-3">Sin citas para hoy</p>
+            <a href="{% url 'add_cita' %}" class="inline-block bg-olive-700 hover:bg-olive-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+              <i class="fas fa-plus mr-1"></i>Agendar cita
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Atajos rápidos -->
+    <div class="bg-dark-800 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700">
+      <div class="flex items-center mb-4 sm:mb-6">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-olive-700 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+          <i class="fas fa-bolt text-white text-sm sm:text-base"></i>
+        </div>
+        <h2 class="text-base sm:text-lg lg:text-xl font-bold text-white">Atajos rápidos</h2>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <a href="{% url 'add_cita' %}"
+           class="group relative overflow-hidden flex items-center gap-4 p-4 sm:p-5 rounded-xl
+                  bg-gradient-to-br from-blue-900/40 to-blue-800/20 border border-blue-700/50
+                  hover:border-blue-500 hover:from-blue-800/60 transition-all duration-300">
+          <span class="absolute -right-4 -bottom-4 text-blue-700/20 text-7xl group-hover:scale-110 transition-transform">
+            <i class="fas fa-calendar-plus"></i>
+          </span>
+          <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
+            <i class="fas fa-calendar-plus text-white text-xl"></i>
+          </div>
+          <div class="relative">
+            <p class="text-white font-bold text-sm sm:text-base">Nueva cita</p>
+            <p class="text-blue-300 text-xs">Agendar consulta</p>
+          </div>
+        </a>
+
+        <a href="{% url 'add_venta' %}"
+           class="group relative overflow-hidden flex items-center gap-4 p-4 sm:p-5 rounded-xl
+                  bg-gradient-to-br from-olive-900/40 to-olive-800/20 border border-olive-700/50
+                  hover:border-olive-500 hover:from-olive-800/60 transition-all duration-300">
+          <span class="absolute -right-4 -bottom-4 text-olive-700/20 text-7xl group-hover:scale-110 transition-transform">
+            <i class="fas fa-cash-register"></i>
+          </span>
+          <div class="w-12 h-12 bg-olive-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
+            <i class="fas fa-cash-register text-white text-xl"></i>
+          </div>
+          <div class="relative">
+            <p class="text-white font-bold text-sm sm:text-base">Nueva venta</p>
+            <p class="text-olive-300 text-xs">Registrar venta</p>
+          </div>
+        </a>
+
+        <a href="{% url 'add_paciente' %}"
+           class="group relative overflow-hidden flex items-center gap-4 p-4 sm:p-5 rounded-xl
+                  bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-700/50
+                  hover:border-purple-500 hover:from-purple-800/60 transition-all duration-300">
+          <span class="absolute -right-4 -bottom-4 text-purple-700/20 text-7xl group-hover:scale-110 transition-transform">
+            <i class="fas fa-paw"></i>
+          </span>
+          <div class="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
+            <i class="fas fa-paw text-white text-xl"></i>
+          </div>
+          <div class="relative">
+            <p class="text-white font-bold text-sm sm:text-base">Nuevo paciente</p>
+            <p class="text-purple-300 text-xs">Registrar mascota</p>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- User Distribution - RESPONSIVE -->
+    <div class="bg-dark-800 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700">
+      <div class="flex items-center mb-4 sm:mb-6">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-700 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+          <i class="fas fa-users text-white text-sm sm:text-base"></i>
+        </div>
+        <h2 class="text-base sm:text-lg lg:text-xl font-bold text-white">Distribución de Usuarios</h2>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-3 sm:gap-6">
+        <div class="text-center p-3 sm:p-6 bg-gradient-to-br from-purple-900/30 to-purple-800/30 rounded-xl border border-purple-700/50
+                    hover:transform hover:scale-105 transition-all duration-300">
+          <div class="w-12 h-12 sm:w-16 sm:h-16 bg-purple-700 rounded-full mx-auto mb-2 sm:mb-4 flex items-center justify-center">
+            <i class="fas fa-user-md text-white text-lg sm:text-2xl"></i>
+          </div>
+          <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">{{ total_veterinarios_users }}</p>
+          <p class="text-purple-300 font-medium text-xs sm:text-sm lg:text-base">Veterinarios</p>
+        </div>
+        
+        <div class="text-center p-3 sm:p-6 bg-gradient-to-br from-orange-900/30 to-orange-800/30 rounded-xl border border-orange-700/50
+                    hover:transform hover:scale-105 transition-all duration-300">
+          <div class="w-12 h-12 sm:w-16 sm:h-16 bg-orange-700 rounded-full mx-auto mb-2 sm:mb-4 flex items-center justify-center">
+            <i class="fas fa-user-shield text-white text-lg sm:text-2xl"></i>
+          </div>
+          <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">{{ total_admins }}</p>
+          <p class="text-orange-300 font-medium text-xs sm:text-sm lg:text-base">Administradores</p>
+        </div>
+      </div>
+    </div>
+
+  <!-- ========== DASHBOARD VETERINARIO ========== -->
+  {% elif rol == 'Veterinario' %}
+    
+    <!-- Tarjetas de resumen - RESPONSIVE -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+      <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-3 sm:p-4 lg:p-6 rounded-xl shadow-xl border border-dark-700 
+                  hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-400 text-xs sm:text-sm font-medium mb-1 sm:mb-2 truncate">Total</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">{{ total_citas }}</p>
+          </div>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-blue-700 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+            <i class="fas fa-calendar-alt text-white text-base sm:text-lg lg:text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-3 sm:p-4 lg:p-6 rounded-xl shadow-xl border border-dark-700 
+                  hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-400 text-xs sm:text-sm font-medium mb-1 sm:mb-2 truncate">Pendientes</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">{{ citas_pendientes }}</p>
+          </div>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-yellow-700 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+            <i class="fas fa-hourglass-half text-white text-base sm:text-lg lg:text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-3 sm:p-4 lg:p-6 rounded-xl shadow-xl border border-dark-700 
+                  hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-400 text-xs sm:text-sm font-medium mb-1 sm:mb-2 truncate">Hecho</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">{{ citas_completadas }}</p>
+          </div>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-green-700 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+            <i class="fas fa-check-circle text-white text-base sm:text-lg lg:text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-3 sm:p-4 lg:p-6 rounded-xl shadow-xl border border-dark-700 
+                  hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-400 text-xs sm:text-sm font-medium mb-1 sm:mb-2 truncate">Hoy</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">{{ citas_hoy }}</p>
+          </div>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-purple-700 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+            <i class="fas fa-calendar-day text-white text-base sm:text-lg lg:text-2xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Próximas citas - RESPONSIVE -->
+    <div class="bg-dark-800 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700">
+      <div class="flex items-center mb-4 sm:mb-6">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-olive-700 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+          <i class="fas fa-calendar-check text-white text-sm sm:text-base"></i>
+        </div>
+        <h2 class="text-base sm:text-lg lg:text-xl font-bold text-white">Próximas Citas</h2>
+      </div>
+      
+      {% if proximas_citas %}
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+          <table class="min-w-full">
+            <thead class="bg-dark-900 border-b border-dark-700">
+              <tr>
+                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-300">
+                  <i class="fas fa-paw text-olive-500 mr-1 sm:mr-2"></i><span class="hidden sm:inline">Mascota</span>
+                </th>
+                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-300 hidden md:table-cell">
+                  <i class="fas fa-user-md text-olive-500 mr-2"></i>Veterinario
+                </th>
+                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-300">
+                  <i class="fas fa-calendar text-olive-500 mr-1 sm:mr-2"></i><span class="hidden sm:inline">Fecha</span>
+                </th>
+                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-300">
+                  <i class="fas fa-clock text-olive-500 mr-1 sm:mr-2"></i><span class="hidden sm:inline">Hora</span>
+                </th>
+                <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-300 hidden lg:table-cell">
+                  <i class="fas fa-notes-medical text-olive-500 mr-2"></i>Motivo
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-dark-700">
+              {% for cita in proximas_citas %}
+                <tr class="hover:bg-dark-900 transition-colors">
+                  <td class="px-3 sm:px-6 py-3 sm:py-4 text-white text-xs sm:text-sm truncate max-w-[100px]">{{ cita.mascota }}</td>
+                  <td class="px-3 sm:px-6 py-3 sm:py-4 text-gray-300 text-xs sm:text-sm hidden md:table-cell truncate">{{ cita.veterinario }}</td>
+                  <td class="px-3 sm:px-6 py-3 sm:py-4 text-gray-300 text-xs sm:text-sm">{{ cita.fecha }}</td>
+                  <td class="px-3 sm:px-6 py-3 sm:py-4 text-gray-300 text-xs sm:text-sm">{{ cita.hora }}</td>
+                  <td class="px-3 sm:px-6 py-3 sm:py-4 text-gray-400 text-xs sm:text-sm hidden lg:table-cell truncate max-w-[150px]">{{ cita.motivo }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-8 sm:py-12">
+          <i class="fas fa-calendar-times text-gray-600 text-3xl sm:text-5xl mb-4"></i>
+          <p class="text-gray-500 text-sm sm:text-base">No hay citas próximas</p>
+        </div>
+      {% endif %}
+    </div>
+
+  <!-- ========== DASHBOARD CLIENTE ========== -->
+  {% else %}
+    
+    <!-- Tarjetas de resumen - RESPONSIVE -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+      <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700 
+                  hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-400 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Mis Mascotas</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{{ total_mis_mascotas }}</p>
+          </div>
+          <div class="w-12 h-12 sm:w-16 sm:h-16 bg-olive-700 rounded-full flex items-center justify-center flex-shrink-0 ml-3">
+            <i class="fas fa-dog text-white text-lg sm:text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700 
+                  hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-400 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Citas</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{{ total_mis_citas }}</p>
+          </div>
+          <div class="w-12 h-12 sm:w-16 sm:h-16 bg-green-700 rounded-full flex items-center justify-center flex-shrink-0 ml-3">
+            <i class="fas fa-calendar-check text-white text-lg sm:text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700 
+                  hover:transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-gray-400 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Pendientes</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{{ mis_citas_pendientes }}</p>
+          </div>
+          <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-700 rounded-full flex items-center justify-center flex-shrink-0 ml-3">
+            <i class="fas fa-clock text-white text-lg sm:text-2xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      
+      <!-- Mis mascotas - RESPONSIVE -->
+      <div class="bg-dark-800 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700">
+        <div class="flex items-center mb-4 sm:mb-6">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 bg-olive-700 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+            <i class="fas fa-paw text-white text-sm sm:text-base"></i>
+          </div>
+          <h2 class="text-base sm:text-lg lg:text-xl font-bold text-white">Mis Mascotas</h2>
+        </div>
+        
+        {% if mis_mascotas %}
+          <div class="space-y-3">
+            {% for mascota in mis_mascotas %}
+              <div class="flex items-center justify-between p-3 sm:p-4 bg-dark-900 rounded-lg border border-dark-700
+                          hover:border-olive-600 transition-all duration-300 group">
+                <div class="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-olive-700 to-olive-600 rounded-full 
+                              flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                    <i class="fas fa-paw text-white text-sm sm:text-base"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm sm:text-base font-semibold text-white group-hover:text-olive-400 transition-colors truncate">
+                      {{ mascota.nombre }}
+                    </p>
+                    <p class="text-xs sm:text-sm text-gray-400 truncate">{{ mascota.especie }} - {{ mascota.raza }}</p>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-8 sm:py-12">
+            <i class="fas fa-dog text-gray-600 text-3xl sm:text-5xl mb-4"></i>
+            <p class="text-gray-500 text-sm sm:text-base mb-4">No hay mascotas registradas</p>
+            <a href="{% url 'add_paciente' %}" 
+               class="inline-block bg-olive-700 hover:bg-olive-600 text-white px-4 sm:px-6 py-2 rounded-lg transition-colors text-sm sm:text-base">
+              <i class="fas fa-plus mr-2"></i>Agregar Mascota
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Próximas citas - RESPONSIVE -->
+      <div class="bg-dark-800 p-4 sm:p-6 rounded-xl shadow-xl border border-dark-700">
+        <div class="flex items-center mb-4 sm:mb-6">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-700 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+            <i class="fas fa-calendar-alt text-white text-sm sm:text-base"></i>
+          </div>
+          <h2 class="text-base sm:text-lg lg:text-xl font-bold text-white">Próximas</h2>
+        </div>
+        
+        {% if proximas_citas %}
+          <div class="space-y-3 sm:space-y-4">
+            {% for cita in proximas_citas %}
+              <div class="border-l-4 border-olive-600 pl-3 sm:pl-4 py-3 bg-dark-900 rounded-r-lg
+                          hover:bg-dark-700 transition-colors">
+                <p class="text-sm sm:text-base font-semibold text-white mb-1 truncate">
+                  <i class="fas fa-paw text-olive-500 mr-2"></i>{{ cita.mascota }}
+                </p>
+                <p class="text-xs sm:text-sm text-gray-400 mb-1 truncate">
+                  <i class="fas fa-user-md text-gray-500 mr-2"></i>Dr. {{ cita.veterinario }}
+                </p>
+                <p class="text-xs sm:text-sm text-gray-400 mb-1">
+                  <i class="fas fa-calendar text-gray-500 mr-2"></i>{{ cita.fecha }} a las {{ cita.hora }}
+                </p>
+                <p class="text-xs text-gray-500 truncate">
+                  <i class="fas fa-notes-medical text-gray-600 mr-2"></i>{{ cita.motivo }}
+                </p>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-8 sm:py-12">
+            <i class="fas fa-calendar-times text-gray-600 text-3xl sm:text-5xl mb-4"></i>
+            <p class="text-gray-500 text-sm sm:text-base mb-4">No hay citas próximas</p>
+            <a href="{% url 'add_cita' %}" 
+               class="inline-block bg-olive-700 hover:bg-olive-600 text-white px-4 sm:px-6 py-2 rounded-lg transition-colors text-sm sm:text-base">
+              <i class="fas fa-plus mr-2"></i>Agendar
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  {% endif %}
+  
+</div>
+
+{% endblock %}

@@ -1,0 +1,195 @@
+<!-- templates/includes/sidebar.html -->
+<div id="sidebar" class="w-64 bg-gradient-to-b from-dark-800 to-dark-900 text-white
+     transition-transform duration-300 ease-in-out fixed inset-y-0 left-0 shadow-2xl border-r border-dark-700
+     lg:translate-x-0 -translate-x-full z-20 flex flex-col overflow-hidden">
+
+  <!-- Logo -->
+  <div class="text-center p-4 border-b border-dark-700 flex-shrink-0">
+    <div class="w-14 h-14 mx-auto mb-2 bg-olive-700 rounded-full flex items-center justify-center shadow-lg">
+      <i class="fas fa-paw text-2xl text-white"></i>
+    </div>
+    <h2 class="text-xl font-bold text-olive-500">Kane Agropet</h2>
+    <p class="text-xs text-gray-400 mt-0.5">Sistema Veterinario</p>
+  </div>
+
+  <!-- Navegación -->
+  <nav class="flex-1 overflow-y-auto overflow-x-hidden px-4 py-3 space-y-1.5">
+
+    <!-- Panel principal -->
+    <a href="{% url 'index' %}"
+       class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+              hover:bg-olive-700 transition-all duration-300
+              {% if request.path == '/' %}bg-olive-700 shadow-lg{% endif %}">
+      <i class="fas fa-chart-line text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+      <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Panel principal</span>
+    </a>
+
+    <!-- Pacientes -->
+    <a href="{% url 'list_pacientes' %}"
+       class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+              hover:bg-olive-700 transition-all duration-300
+              {% if 'patients' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+      <i class="fas fa-users text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+      <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Pacientes</span>
+    </a>
+
+    {% if rol == 'Administrador' %}
+      <div class="pt-3 pb-1.5">
+        <p class="text-xs text-gray-500 uppercase tracking-wider px-3 truncate">Administración</p>
+      </div>
+
+      <!-- Veterinarios -->
+      <a href="{% url 'list_veterinarios' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'vets' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-user-md text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Veterinarios</span>
+      </a>
+
+      <!-- Usuarios -->
+      <a href="{% url 'admin_users_list' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'panel/users' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-users text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Gestionar Usuarios</span>
+      </a>
+
+      <!-- Citas -->
+      <a href="{% url 'list_citas' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'appointments' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-calendar-check text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Citas</span>
+      </a>
+      <!-- Tarifas de citas -->
+      <a href="{% url 'list_tarifas' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'tarifas' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-tags text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Tarifas</span>
+      </a>
+
+      <!-- Inventario -->
+      <a href="{% url 'list_productos' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'productos' in request.path or 'categorias' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-boxes text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Inventario</span>
+      </a>
+
+      <!-- Categorías -->
+      <a href="{% url 'list_categorias' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'categorias' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-tags text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Categorías</span>
+      </a>
+
+      <!-- Ventas -->
+      <a href="{% url 'list_ventas' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'ventas' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-cash-register text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Ventas</span>
+      </a>
+
+      <!-- Reportes -->
+      <a href="{% url 'reports' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'reports' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-chart-bar text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Reportes</span>
+      </a>
+
+    {% elif rol == 'Veterinario' %}
+      <div class="pt-3 pb-1.5">
+        <p class="text-xs text-gray-500 uppercase tracking-wider px-3 truncate">Clínica</p>
+      </div>
+
+      <a href="{% url 'list_citas' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'appointments' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-calendar-alt text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Citas</span>
+      </a>
+
+      <a href="{% url 'list_recetas' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'recetas' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-prescription-bottle text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Recetario</span>
+      </a>
+
+      <a href="{% url 'reports' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'reports' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-chart-bar text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Reportes</span>
+      </a>
+
+    {% elif rol == 'Peluquero' %}
+      <div class="pt-3 pb-1.5">
+        <p class="text-xs text-gray-500 uppercase tracking-wider px-3 truncate">Peluquería</p>
+      </div>
+
+      <a href="{% url 'list_citas' %}"
+         class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+                hover:bg-olive-700 transition-all duration-300
+                {% if 'appointments' in request.path %}bg-olive-700 shadow-lg{% endif %}">
+        <i class="fas fa-calendar text-olive-500 group-hover:text-white w-4 flex-shrink-0"></i>
+        <span class="font-medium group-hover:translate-x-1 transition-transform truncate">Citas Peluquería</span>
+      </a>
+    {% endif %}
+
+    <div class="h-16"></div>
+  </nav>
+
+  <!-- Footer sidebar -->
+  <div class="p-4 border-t border-dark-700 bg-dark-900 flex-shrink-0">
+    <a href="{% url 'logout' %}"
+       class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm
+              bg-red-900/30 hover:bg-red-900 transition-all duration-300">
+      <i class="fas fa-sign-out-alt text-red-400 group-hover:text-white w-4 flex-shrink-0"></i>
+      <span class="font-medium text-red-300 group-hover:text-white group-hover:translate-x-1 transition-transform truncate">
+        Cerrar sesión
+      </span>
+    </a>
+  </div>
+</div>
+
+<!-- Overlay para cerrar el sidebar en móvil -->
+<div id="sidebar-overlay"
+     class="fixed inset-0 bg-black/50 z-10 lg:hidden hidden"
+     onclick="document.getElementById('sidebar').classList.add('-translate-x-full'); this.classList.add('hidden');">
+</div>
+
+<script>
+  const sidebar  = document.getElementById('sidebar');
+  const overlay  = document.getElementById('sidebar-overlay');
+  const observer = new MutationObserver(() => {
+    if (window.innerWidth < 1024) {
+      overlay.classList.toggle('hidden', sidebar.classList.contains('-translate-x-full'));
+    }
+  });
+  observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+
+  if (window.innerWidth < 1024) {
+    sidebar.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+      });
+    });
+  }
+</script>

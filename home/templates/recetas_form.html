@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+  <h1 class="text-3xl font-bold text-white mb-6"><i class="fas fa-prescription text-olive-500 mr-2"></i> Nueva receta</h1>
+
+  {% if messages %}{% for m in messages %}
+    <div class="p-4 rounded-lg mb-4 {% if m.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %}">{{ m }}</div>
+  {% endfor %}{% endif %}
+
+  <form method="post" class="space-y-6" onsubmit="return prepareSubmit()">
+    {% csrf_token %}
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Paciente *</label>
+        <select name="paciente" required class="w-full bg-dark-900 border border-dark-700 rounded px-3 py-2 text-white">
+          <option value="">— Seleccionar —</option>
+          {% for p in pacientes %}<option value="{{ p.id }}">{{ p.nombre }} ({{ p.especie }}) — {{ p.owner.nombre|default:p.owner.user|default:"sin propietario" }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Veterinario</label>
+        <select name="veterinario" class="w-full bg-dark-900 border border-dark-700 rounded px-3 py-2 text-white">
+          <option value="">— Sin asignar —</option>
+          {% for v in veterinarios %}<option value="{{ v.id }}">{{ v.nombre|default:v.user }} — {{ v.especialidad|default:"" }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Vigencia (días)</label>
+        <input name="vigencia_dias" type="number" min="1" value="30" class="w-full bg-dark-900 border border-dark-700 rounded px-3 py-2 text-white">
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm text-gray-300 mb-1">Diagnóstico</label>
+        <textarea name="diagnostico" rows="2" class="w-full bg-dark-900 border border-dark-700 rounded px-3 py-2 text-white"></textarea>
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm text-gray-300 mb-1">Indicaciones generales</label>
+        <textarea name="indicaciones" rows="3" class="w-full bg-dark-900 border border-dark-700 rounded px-3 py-2 text-white"></textarea>
+      </div>
+    </div>
+
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-white">Medicamentos</h2>
+        <button type="button" onclick="addMed()" class="px-3 py-2 rounded bg-olive-600 text-white"><i class="fas fa-plus mr-1"></i> Agregar</button>
+      </div>
+      <div id="medsContainer" class="space-y-3"></div>
+    </div>
+
+    <input type="hidden" name="items_json" id="items_json">
+    <div class="flex justify-end gap-2">
+      <a href="{% url 'list_recetas' %}" class="px-4 py-2 rounded bg-dark-700 text-white">Cancelar</a>
+      <button class="px-6 py-2 rounded bg-olive-600 hover:bg-olive-500 text-white font-semibold">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const meds = [];
+function addMed(){ meds.push({medicamento:"",dosis:"",via:"",frecuencia:"",duracion:"",observaciones:""}); render(); }
+function removeMed(i){ meds.splice(i,1); render(); }
+function update(i, field, value){ meds[i][field] = value; }
+function render(){
+  const c = document.getElementById('medsContainer');
+  c.innerHTML = '';
+  meds.forEach((m,i) => {
+    c.innerHTML += `<div class="bg-dark-900 border border-dark-700 rounded-lg p-4 grid grid-cols-1 md:grid-cols-3 gap-3 relative">
+      <div class="md:col-span-3"><label class="text-xs text-gray-400">Medicamento *</label><input value="${m.medicamento}" oninput="update(${i},'medicamento',this.value)" class="w-full bg-dark-800 border border-dark-700 rounded px-3 py-2 text-white"></div>
+      <div><label class="text-xs text-gray-400">Dosis</label><input value="${m.dosis}" oninput="update(${i},'dosis',this.value)" class="w-full bg-dark-800 border border-dark-700 rounded px-3 py-2 text-white"></div>
+      <div><label class="text-xs text-gray-400">Vía</label><input value="${m.via}" oninput="update(${i},'via',this.value)" placeholder="oral, IV…" class="w-full bg-dark-800 border border-dark-700 rounded px-3 py-2 text-white"></div>
+      <div><label class="text-xs text-gray-400">Frecuencia</label><input value="${m.frecuencia}" oninput="update(${i},'frecuencia',this.value)" placeholder="cada 8h" class="w-full bg-dark-800 border border-dark-700 rounded px-3 py-2 text-white"></div>
+      <div><label class="text-xs text-gray-400">Duración</label><input value="${m.duracion}" oninput="update(${i},'duracion',this.value)" placeholder="7 días" class="w-full bg-dark-800 border border-dark-700 rounded px-3 py-2 text-white"></div>
+      <div class="md:col-span-2"><label class="text-xs text-gray-400">Observaciones</label><input value="${m.observaciones}" oninput="update(${i},'observaciones',this.value)" class="w-full bg-dark-800 border border-dark-700 rounded px-3 py-2 text-white"></div>
+      <button type="button" onclick="removeMed(${i})" class="absolute top-2 right-2 text-red-400"><i class="fas fa-times"></i></button>
+    </div>`;
+  });
+}
+function prepareSubmit(){
+  const valid = meds.filter(m => m.medicamento.trim());
+  if(valid.length === 0){ alert('Agrega al menos un medicamento.'); return false; }
+  document.getElementById('items_json').value = JSON.stringify(valid);
+  return true;
+}
+addMed();
+</script>
+{% endblock %}

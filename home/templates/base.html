@@ -1,0 +1,546 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="es" id="htmlRoot">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kane Agropet — Sistema Veterinario</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%2365a30d'><path d='M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z'/></svg>">
+
+  <!-- ① Aplicar tema ANTES de renderizar el body (evita parpadeo) -->
+  <script>
+    (function () {
+      if (localStorage.getItem('tema') === 'claro') {
+        document.documentElement.classList.add('light');
+      }
+    })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            /* Verde limón frío (nuevo color principal) */
+            'olive': {
+              50:  '#f7fee7',
+              100: '#ecfccb',
+              200: '#d9f99d',
+              300: '#bef264',
+              400: '#a3e635',
+              500: '#84cc16',
+              600: '#65a30d',
+              700: '#4d7c0f',
+              800: '#3f6212',
+              900: '#365314',
+            },
+            'dark': {
+              50:  '#f9fafb',
+              100: '#f3f4f6',
+              200: '#e5e7eb',
+              300: '#d1d5db',
+              400: '#9ca3af',
+              500: '#6b7280',
+              600: '#4b5563',
+              700: '#374151',
+              800: '#1f2937',
+              900: '#111827',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+    /* ── MODO OSCURO (predeterminado) ── */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    }
+    html, body { overflow-x: hidden; max-width: 100vw; }
+
+    /* Scrollbar modo oscuro */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: #1f2937; }
+    ::-webkit-scrollbar-thumb { background: #4d7c0f; border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: #65a30d; }
+    nav::-webkit-scrollbar { width: 4px; }
+    nav::-webkit-scrollbar-track { background: transparent; }
+    nav::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+    nav::-webkit-scrollbar-thumb:hover { background: #65a30d; }
+    nav { scrollbar-width: thin; scrollbar-color: #334155 transparent; scroll-behavior: smooth; }
+
+    /* Glassmorphism */
+    .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+
+    /* Animaciones */
+    .fade-in { animation: fadeIn 0.5s ease-in; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes dropdownOpen { from { opacity:0; transform:scale(0.95) translateY(-10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    @keyframes dropdownClose { from { opacity:1; transform:scale(1) translateY(0); } to { opacity:0; transform:scale(0.95) translateY(-10px); } }
+    .dropdown-open { animation: dropdownOpen 0.2s ease-out forwards; }
+    .dropdown-close { animation: dropdownClose 0.15s ease-in forwards; }
+
+    /* Touch devices */
+    .touch-device button, .touch-device a { -webkit-tap-highlight-color: rgba(101,163,13,0.2); }
+    @media (max-width: 640px) { button, a { min-height: 44px; min-width: 44px; } }
+    @media (max-width: 768px) { input, select, textarea { font-size: 16px !important; } }
+    @media (max-width: 375px) { #profileDropdown { right: -0.5rem; left: auto; max-width: calc(100vw - 1rem); } }
+
+    /* ══════════════════════════════════════════════════
+       MODO CLARO — overrides usando html.light
+    ══════════════════════════════════════════════════ */
+
+    /* Fondo general */
+    html.light body { background: linear-gradient(135deg, #f7fee7 0%, #ecfdf5 100%); }
+
+    /* Backgrounds oscuros → claros */
+    html.light .bg-dark-900 { background-color: #f1f5f9 !important; }
+    html.light .bg-dark-800 { background-color: #ffffff !important; }
+    html.light .bg-dark-700 { background-color: #f1f5f9 !important; }
+    html.light .bg-dark-600 { background-color: #e2e8f0 !important; }
+    html.light .from-dark-800 { --tw-gradient-from: #ffffff !important; }
+    html.light .to-dark-900  { --tw-gradient-to:   #f1f5f9 !important; }
+
+    /* Texto: blanco/gris → oscuro */
+    html.light .text-white  { color: #1e293b !important; }
+    html.light .text-gray-50 { color: #1e293b !important; }
+    html.light .text-gray-100 { color: #1e293b !important; }
+    html.light .text-gray-200 { color: #334155 !important; }
+    html.light .text-gray-300 { color: #475569 !important; }
+    html.light .text-gray-400 { color: #64748b !important; }
+    html.light .text-gray-500 { color: #94a3b8 !important; }
+    html.light .text-gray-600 { color: #cbd5e1 !important; }
+    html.light .text-gray-700 { color: #0f172a !important; }
+    html.light .text-gray-800 { color: #020617 !important; }
+    html.light .text-gray-900 { color: #000000 !important; }
+
+    /* Colores específicos - Olive */
+    html.light .text-olive-400 { color: #4d7c0f !important; }
+    html.light .text-olive-300 { color: #65a30d !important; }
+    html.light .text-olive-200 { color: #84cc16 !important; }
+
+    /* Colores específicos - Red */
+    html.light .text-red-300 { color: #dc2626 !important; }
+    html.light .text-red-400 { color: #ef4444 !important; }
+    html.light .text-red-500 { color: #f87171 !important; }
+
+    /* Colores específicos - Blue */
+    html.light .text-blue-300 { color: #0284c7 !important; }
+    html.light .text-blue-400 { color: #0ea5e9 !important; }
+
+    /* Colores específicos - Green */
+    html.light .text-green-300 { color: #16a34a !important; }
+    html.light .text-green-400 { color: #22c55e !important; }
+
+    /* Colores específicos - Purple */
+    html.light .text-purple-400 { color: #a855f7 !important; }
+    html.light .text-purple-300 { color: #c084fc !important; }
+
+    /* Colores específicos - Orange */
+    html.light .text-orange-400 { color: #ea580c !important; }
+    html.light .text-orange-500 { color: #f97316 !important; }
+
+    /* Colores específicos - Yellow */
+    html.light .text-yellow-300 { color: #eab308 !important; }
+    html.light .text-yellow-400 { color: #facc15 !important; }
+
+    /* Colores específicos - Pink */
+    html.light .text-pink-400 { color: #f472b6 !important; }
+    html.light .text-pink-300 { color: #fbcfe8 !important; }
+
+    /* Cyan */
+    html.light .text-cyan-300 { color: #06b6d4 !important; }
+    html.light .text-cyan-400 { color: #06b6d4 !important; }
+
+    /* Bordes */
+    html.light .border-dark-700 { border-color: #e2e8f0 !important; }
+    html.light .border-dark-600 { border-color: #cbd5e1 !important; }
+    html.light .border-dark-500 { border-color: #94a3b8 !important; }
+    html.light .divide-dark-700 > * + * { border-color: #e2e8f0 !important; }
+
+    /* Formularios */
+    html.light input:not([type=checkbox]):not([type=radio]):not([type=file]),
+    html.light select,
+    html.light textarea {
+      background-color: #f8fafc !important;
+      color: #1e293b !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light input::placeholder,
+    html.light textarea::placeholder { color: #94a3b8 !important; }
+
+    /* ── Restaurar texto blanco en fondos de color sólido ── */
+    html.light .bg-olive-500,
+    html.light .bg-olive-600,
+    html.light .bg-olive-700,
+    html.light .bg-olive-800 { color: white !important; }
+
+    html.light .bg-red-600,
+    html.light .bg-red-700,
+    html.light .bg-red-800 { color: white !important; }
+
+    html.light .bg-blue-600,
+    html.light .bg-blue-700,
+    html.light .bg-blue-800 { color: white !important; }
+
+    html.light .bg-green-600,
+    html.light .bg-green-700,
+    html.light .bg-green-800 { color: white !important; }
+
+    html.light .bg-purple-600,
+    html.light .bg-purple-700 { color: white !important; }
+
+    html.light .bg-orange-600,
+    html.light .bg-orange-700 { color: white !important; }
+
+    html.light .bg-cyan-600,
+    html.light .bg-cyan-700 { color: white !important; }
+
+    html.light .bg-yellow-600,
+    html.light .bg-yellow-700 { color: white !important; }
+
+    html.light .bg-pink-600,
+    html.light .bg-pink-700 { color: white !important; }
+
+    /* Gradiente en botones → mantener texto blanco */
+    html.light [class*="from-olive-"] { color: white !important; }
+    html.light [class*="from-red-7"]  { color: white !important; }
+    html.light [class*="from-blue-7"] { color: white !important; }
+    html.light [class*="from-purple-7"] { color: white !important; }
+    html.light [class*="from-pink-7"]   { color: white !important; }
+
+    /* Sidebar en modo claro */
+    html.light #sidebar {
+      background: linear-gradient(to bottom, #ffffff, #f1f5f9) !important;
+      border-right-color: #e2e8f0 !important;
+    }
+    /* Mantener texto blanco en link activo/hover del sidebar */
+    html.light #sidebar nav a.bg-olive-700,
+    html.light #sidebar nav a.bg-olive-700 * { color: white !important; }
+    html.light #sidebar nav a:hover,
+    html.light #sidebar nav a:hover * { color: white !important; }
+    html.light #sidebar .text-gray-400 { color: #64748b !important; }
+    html.light #sidebar .border-dark-700 { border-color: #e2e8f0 !important; }
+    html.light #sidebar .bg-dark-900 { background-color: #f1f5f9 !important; }
+    html.light #sidebar .bg-red-900\/30 { background-color: rgba(254,226,226,0.6) !important; }
+    html.light #sidebar .text-red-300 { color: #dc2626 !important; }
+    html.light #sidebar .text-red-400 { color: #dc2626 !important; }
+
+    /* Header barra superior */
+    html.light .bg-dark-800.sticky { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
+
+    /* Dropdown de perfil */
+    html.light #profileDropdown { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
+    html.light #profileDropdown .bg-dark-900 { background-color: #f8fafc !important; }
+
+    /* Botón toggle tema en modo claro */
+    html.light #themeToggle { background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; }
+
+    /* Scrollbar modo claro */
+    html.light ::-webkit-scrollbar-track { background: #f1f5f9; }
+    html.light ::-webkit-scrollbar-thumb { background: #65a30d; }
+
+    /* ════════════════════════════════════════════════════
+       HOVERS en modo claro — verde muy clarito
+    ════════════════════════════════════════════════════ */
+    html.light .hover\:bg-dark-700:hover { background-color: #dcfce7 !important; }
+    html.light .hover\:bg-dark-900:hover { background-color: #f1f5f9 !important; }
+    html.light .hover\:bg-dark-600:hover { background-color: #e2e8f0 !important; }
+
+    /* Botones con hover a verde claro en light mode */
+    html.light button:hover:not(.bg-gradient-to-r):not(.bg-olive-700):not(.bg-red-):not(.bg-blue-):not(.bg-green-):not(.bg-purple-) {
+      background-color: #dcfce7 !important;
+    }
+
+    /* ════════════════════════════════════════════════════
+       SECURITY TIPS BOX — mejorar visibilidad en light mode
+    ════════════════════════════════════════════════════ */
+    html.light .bg-blue-900\/20 { background-color: rgba(59, 130, 246, 0.15) !important; }
+    html.light .border-blue-700 { border-color: #3b82f6 !important; }
+    html.light .text-blue-200 { color: #1e40af !important; }
+    html.light .text-blue-300 { color: #1e40af !important; }
+    html.light .text-blue-400 { color: #2563eb !important; }
+
+    /* Listas dentro del security tips */
+    html.light .bg-blue-900\/20 ul li { color: #1e40af !important; }
+    html.light .bg-blue-900\/20 p { color: #1e40af !important; }
+
+    /* ════════════════════════════════════════════════════
+       CATEGORÍAS EN CITAS — mejorar contraste y visibilidad
+    ════════════════════════════════════════════════════ */
+    html.light .bg-pink-900\/40 { background-color: rgba(244, 114, 182, 0.2) !important; }
+    html.light .text-pink-400 { color: #ec4899 !important; }
+    html.light .border-pink-700 { border-color: #be185d !important; }
+
+    html.light .bg-blue-900\/40 { background-color: rgba(59, 130, 246, 0.2) !important; }
+    html.light .text-cyan-300 { color: #0891b2 !important; }
+    html.light .border-cyan-700 { border-color: #0e7490 !important; }
+
+    /* Badges de estado en citas */
+    html.light .bg-green-900\/40 { background-color: rgba(34, 197, 94, 0.2) !important; }
+    html.light .text-green-400 { color: #16a34a !important; }
+    html.light .border-green-700 { border-color: #15803d !important; }
+
+    html.light .bg-blue-700\/30 { background-color: rgba(29, 78, 216, 0.2) !important; }
+    html.light .border-blue-700 { border-color: #1e40af !important; }
+
+    html.light .bg-red-700\/30 { background-color: rgba(185, 28, 28, 0.2) !important; }
+    html.light .border-red-700 { border-color: #b91c1c !important; }
+
+    /* ════════════════════════════════════════════════════
+       ACCIONES Y BOTONES EN TABLAS — mejorar visibilidad
+    ════════════════════════════════════════════════════ */
+    html.light .text-olive-400 { color: #4d7c0f !important; }
+    html.light .hover\:text-olive-300:hover { color: #65a30d !important; }
+    html.light .hover\:bg-dark-700:hover { background-color: #dcfce7 !important; }
+
+    html.light .text-red-400 { color: #dc2626 !important; }
+    html.light .hover\:text-red-300:hover { color: #ef4444 !important; }
+
+    /* Mejorar espaciado y visibilidad en celdas de tabla */
+    html.light table tbody tr { background-color: #ffffff !important; }
+    html.light table tbody tr:hover { background-color: #f0fdf4 !important; }
+  </style>
+</head>
+
+<body class="text-gray-100">
+
+  <div class="flex min-h-screen w-full overflow-hidden">
+    {% if username %}
+      {% include 'includes/sidebar.html' %}
+    {% endif %}
+
+    <div class="flex-1 {% if username %}lg:ml-64{% endif %} transition-all duration-300 w-full min-w-0">
+      {% if username %}
+        <!-- Barra superior -->
+        <div class="bg-dark-800 border-b border-dark-700 px-3 sm:px-4 md:px-6 lg:px-8
+                    py-3 sm:py-4 flex justify-between items-center sticky top-0 z-10 shadow-lg">
+
+          <!-- Botón toggle sidebar (móvil) -->
+          <button id="toggleSidebar"
+                  class="lg:hidden text-white hover:text-olive-500 transition-colors p-2 rounded-lg
+                         hover:bg-dark-700 active:scale-95 transform">
+            <i class="fas fa-bars text-xl sm:text-2xl"></i>
+          </button>
+
+          <!-- Controles lado derecho -->
+          <div class="flex items-center space-x-2 sm:space-x-3 ml-auto relative">
+
+            <!-- Texto bienvenida (oculto en móvil pequeño) -->
+            <div class="text-right hidden sm:block">
+              <p class="text-xs sm:text-sm text-gray-400 truncate">Bienvenido,</p>
+              <p class="font-semibold text-olive-400 text-sm sm:text-base truncate max-w-[120px] sm:max-w-[150px] md:max-w-none">
+                {{ username }}
+              </p>
+            </div>
+
+            <!-- Toggle modo claro/oscuro -->
+            <button id="themeToggle"
+                    onclick="toggleTema()"
+                    title="Cambiar tema"
+                    class="w-9 h-9 rounded-lg flex items-center justify-center
+                           bg-dark-700 hover:bg-dark-600 text-gray-300 hover:text-white
+                           transition-all duration-300 border border-dark-600 flex-shrink-0">
+              <i class="fas fa-sun hidden text-yellow-400" id="iconSol"></i>
+              <i class="fas fa-moon text-blue-300" id="iconLuna"></i>
+            </button>
+
+            <!-- Dropdown de perfil -->
+            <div class="relative">
+              <button id="profileDropdownBtn"
+                      class="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full overflow-hidden
+                             flex items-center justify-center hover:scale-110 transition-all duration-300
+                             shadow-lg hover:shadow-olive-500/50 focus:outline-none focus:ring-2 focus:ring-olive-500
+                             border-2 border-olive-600 flex-shrink-0">
+                {% if request.session.user_profile_picture %}
+                  <img src="{{ request.session.user_profile_picture }}"
+                       alt="{{ username }}" class="w-full h-full object-cover">
+                {% else %}
+                  <div class="w-full h-full bg-gradient-to-br from-olive-700 to-olive-600 flex items-center justify-center">
+                    <span class="text-white text-xs sm:text-sm font-bold">{{ username|slice:":2"|upper }}</span>
+                  </div>
+                {% endif %}
+              </button>
+
+              <!-- Menú desplegable -->
+              <div id="profileDropdown"
+                   class="hidden absolute right-0 mt-2 sm:mt-3 w-64 sm:w-72
+                          bg-dark-800 border border-dark-700 rounded-xl
+                          shadow-2xl overflow-hidden z-50 transform origin-top-right
+                          max-h-[calc(100vh-5rem)] overflow-y-auto">
+
+                <!-- Info usuario -->
+                <div class="px-3 sm:px-4 py-2.5 sm:py-3 bg-dark-900 border-b border-dark-700">
+                  <div class="flex items-center space-x-2 sm:space-x-3 mb-2">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-olive-600 flex-shrink-0">
+                      {% if request.session.user_profile_picture %}
+                        <img src="{{ request.session.user_profile_picture }}" alt="{{ username }}" class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gradient-to-br from-olive-700 to-olive-600 flex items-center justify-center">
+                          <span class="text-white text-xs font-bold">{{ username|slice:":2"|upper }}</span>
+                        </div>
+                      {% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-xs sm:text-sm text-gray-400">Conectado como</p>
+                      <p class="font-semibold text-white truncate text-sm sm:text-base">{{ username }}</p>
+                    </div>
+                  </div>
+                  {% if rol %}
+                    <span class="inline-block px-2 py-0.5 text-xs rounded-full
+                                 {% if rol == 'Administrador' %}bg-orange-700/30 text-orange-400 border border-orange-700
+                                 {% elif rol == 'Veterinario' %}bg-purple-700/30 text-purple-400 border border-purple-700
+                                 {% else %}bg-olive-700/30 text-olive-400 border border-olive-700{% endif %}">
+                      {{ rol }}
+                    </span>
+                  {% endif %}
+                </div>
+
+                <!-- Opciones -->
+                <div class="py-1 sm:py-2">
+                  <a href="{% url 'edit_profile' %}"
+                     class="flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2.5 sm:py-3
+                            hover:bg-dark-900 transition-colors group active:bg-dark-700">
+                    <div class="w-7 h-7 sm:w-8 sm:h-8 bg-olive-700/30 rounded-lg flex items-center justify-center
+                                group-hover:bg-olive-700 transition-colors flex-shrink-0">
+                      <i class="fas fa-user-edit text-olive-400 group-hover:text-white text-xs sm:text-sm"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-xs sm:text-sm font-medium text-white group-hover:text-olive-400 transition-colors truncate">
+                        Editar perfil
+                      </p>
+                      <p class="text-xs text-gray-500 truncate">Actualizar información</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-600 text-xs group-hover:text-olive-400 flex-shrink-0"></i>
+                  </a>
+
+                  <div class="border-t border-dark-700 my-1 sm:my-2"></div>
+
+                  <a href="{% url 'logout' %}"
+                     class="flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2.5 sm:py-3
+                            hover:bg-red-900/20 transition-colors group active:bg-red-900/30">
+                    <div class="w-7 h-7 sm:w-8 sm:h-8 bg-red-700/30 rounded-lg flex items-center justify-center
+                                group-hover:bg-red-700 transition-colors flex-shrink-0">
+                      <i class="fas fa-sign-out-alt text-red-400 group-hover:text-white text-xs sm:text-sm"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-xs sm:text-sm font-medium text-white group-hover:text-red-400 transition-colors truncate">
+                        Cerrar sesión
+                      </p>
+                      <p class="text-xs text-gray-500 truncate">Salir de la cuenta</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-600 text-xs group-hover:text-red-400 flex-shrink-0"></i>
+                  </a>
+                </div>
+
+                <!-- Footer dropdown -->
+                <div class="px-3 sm:px-4 py-1.5 sm:py-2 bg-dark-900 border-t border-dark-700">
+                  <p class="text-xs text-gray-500 text-center">
+                    <i class="fas fa-shield-alt mr-1"></i>Sesión segura
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Contenido principal -->
+      <div class="p-3 sm:p-4 md:p-6 lg:p-8 fade-in min-h-screen w-full">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+
+<script>
+// ── Toggle de tema ───────────────────────────────────────────────
+function toggleTema() {
+  const html = document.documentElement;
+  const iconSol  = document.getElementById('iconSol');
+  const iconLuna = document.getElementById('iconLuna');
+  if (html.classList.contains('light')) {
+    html.classList.remove('light');
+    localStorage.setItem('tema', 'oscuro');
+    iconSol.classList.add('hidden');
+    iconLuna.classList.remove('hidden');
+  } else {
+    html.classList.add('light');
+    localStorage.setItem('tema', 'claro');
+    iconSol.classList.remove('hidden');
+    iconLuna.classList.add('hidden');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Inicializar icono según tema guardado
+  const html = document.documentElement;
+  const iconSol  = document.getElementById('iconSol');
+  const iconLuna = document.getElementById('iconLuna');
+  if (iconSol && iconLuna) {
+    if (html.classList.contains('light')) {
+      iconSol.classList.remove('hidden');
+      iconLuna.classList.add('hidden');
+    } else {
+      iconSol.classList.add('hidden');
+      iconLuna.classList.remove('hidden');
+    }
+  }
+
+  // ── Sidebar toggle (móvil) ──────────────────────────────────
+  const toggleBtn = document.getElementById('toggleSidebar');
+  const sidebar   = document.getElementById('sidebar');
+  if (toggleBtn && sidebar) {
+    toggleBtn.addEventListener('click', () => sidebar.classList.toggle('-translate-x-full'));
+  }
+
+  // ── Dropdown de perfil ──────────────────────────────────────
+  const profileBtn      = document.getElementById('profileDropdownBtn');
+  const profileDropdown = document.getElementById('profileDropdown');
+  if (profileBtn && profileDropdown) {
+    let isOpen = false;
+    profileBtn.addEventListener('click', function (e) {
+      e.stopPropagation(); e.preventDefault();
+      if (isOpen) {
+        profileDropdown.classList.add('hidden');
+        profileDropdown.classList.remove('dropdown-open');
+        isOpen = false;
+      } else {
+        profileDropdown.classList.remove('hidden');
+        profileDropdown.classList.add('dropdown-open');
+        isOpen = true;
+      }
+    });
+    document.addEventListener('click', function (e) {
+      if (isOpen && !profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
+        profileDropdown.classList.add('hidden');
+        profileDropdown.classList.remove('dropdown-open');
+        isOpen = false;
+      }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && isOpen) {
+        profileDropdown.classList.add('hidden');
+        profileDropdown.classList.remove('dropdown-open');
+        isOpen = false;
+      }
+    });
+    profileDropdown.addEventListener('click', e => e.stopPropagation());
+  }
+
+  // ── Touch support ──────────────────────────────────────────
+  if ('ontouchstart' in window) {
+    document.body.classList.add('touch-device');
+  }
+});
+</script>
+
+</body>
+</html>

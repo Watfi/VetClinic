@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="space-y-6 max-w-7xl mx-auto">
+
+  <!-- Encabezado -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-white flex items-center">
+        <i class="fas fa-paw text-olive-500 mr-3"></i>Mis Mascotas
+      </h1>
+      <p class="text-gray-400 mt-1">Gestiona tus compañeros peludos</p>
+    </div>
+    <a href="{% url 'add_paciente' %}"
+       class="inline-flex items-center space-x-2 bg-gradient-to-r from-olive-700 to-olive-600
+              hover:from-olive-600 hover:to-olive-500 text-white font-semibold px-6 py-3 rounded-lg
+              transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-olive-500/50">
+      <i class="fas fa-plus-circle"></i>
+      <span>Agregar Mascota</span>
+    </a>
+  </div>
+
+  <!-- Mensajes -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %}">
+        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>{{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if patients %}
+    <!-- Estadísticas rápidas -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-4 flex items-center space-x-4">
+        <div class="w-12 h-12 bg-olive-700 rounded-lg flex items-center justify-center">
+          <i class="fas fa-dog text-white text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-400 text-sm">Total mascotas</p>
+          <p class="text-2xl font-bold text-white" id="totalPets">{{ patients|length }}</p>
+        </div>
+      </div>
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-4 flex items-center space-x-4">
+        <div class="w-12 h-12 bg-blue-700 rounded-lg flex items-center justify-center">
+          <i class="fas fa-shield-alt text-white text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-400 text-sm">Bajo cuidado</p>
+          <p class="text-2xl font-bold text-white">{{ patients|length }}</p>
+        </div>
+      </div>
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-4 flex items-center space-x-4">
+        <div class="w-12 h-12 bg-purple-700 rounded-lg flex items-center justify-center">
+          <i class="fas fa-heart text-white text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-400 text-sm">Activas</p>
+          <p class="text-2xl font-bold text-white">{{ patients|length }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+      <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <div class="flex-1 relative">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+          <input type="text" id="searchInput" placeholder="Buscar por nombre, especie, raza..."
+                 class="w-full bg-dark-900 border border-dark-600 rounded-lg pl-12 pr-4 py-3 text-white
+                        focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent"
+                 oninput="searchPets()">
+        </div>
+        <div class="md:w-64">
+          <select id="speciesFilter" onchange="searchPets()"
+                  class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                         focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent">
+            <option value="">Todas las especies</option>
+            <option value="perro">🐕 Perro</option>
+            <option value="gato">🐱 Gato</option>
+            <option value="conejo">🐰 Conejo</option>
+            <option value="ave">🐦 Ave</option>
+            <option value="hámster">🐹 Hámster</option>
+            <option value="reptil">🦎 Reptil</option>
+            <option value="otro">🐾 Otro</option>
+          </select>
+        </div>
+        <button onclick="clearSearch()"
+                class="bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white px-6 py-3 rounded-lg
+                       transition-all duration-300 border border-dark-600 hover:border-olive-600">
+          <i class="fas fa-times mr-2"></i>Limpiar
+        </button>
+      </div>
+      <div class="mt-3">
+        <p class="text-sm text-gray-400"><span id="resultCount">{{ patients|length }}</span> mascotas encontradas</p>
+      </div>
+    </div>
+
+    <!-- Grid de mascotas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="petsGrid">
+      {% for pet in patients %}
+        <div class="pet-card bg-dark-800 border border-dark-700 rounded-xl overflow-hidden
+                    hover:border-olive-600 hover:shadow-xl hover:shadow-olive-500/20
+                    transform hover:-translate-y-2 transition-all duration-300 group"
+             data-name="{{ pet.nombre|lower }}"
+             data-species="{{ pet.especie|lower }}"
+             data-breed="{{ pet.raza|lower }}">
+
+          <!-- Imagen cabecera -->
+          <div class="relative h-48 bg-gradient-to-br from-olive-800 to-olive-700 overflow-hidden">
+            {% if pet.profile_picture %}
+              <img src="{{ pet.profile_picture }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="{{ pet.nombre }}">
+            {% else %}
+              <div class="w-full h-full flex items-center justify-center">
+                <i class="fas fa-paw text-white text-6xl opacity-50"></i>
+              </div>
+            {% endif %}
+            <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/50 to-transparent"></div>
+
+            <!-- Badge especie -->
+            <div class="absolute top-4 right-4">
+              <span class="bg-white/90 backdrop-blur-sm text-olive-800 px-3 py-1 rounded-full text-xs font-bold">
+                <i class="fas fa-paw mr-1"></i>{{ pet.especie }}
+              </span>
+            </div>
+            <!-- Badge sexo -->
+            {% if pet.sexo and pet.sexo != 'Desconocido' %}
+            <div class="absolute top-4 left-4">
+              <span class="{% if pet.sexo == 'Macho' %}bg-blue-600{% else %}bg-pink-600{% endif %} text-white px-2 py-1 rounded-full text-xs font-bold">
+                {% if pet.sexo == 'Macho' %}♂{% else %}♀{% endif %} {{ pet.sexo }}
+              </span>
+            </div>
+            {% endif %}
+
+            <!-- Nombre -->
+            <div class="absolute bottom-4 left-4 right-4">
+              <h3 class="pet-name text-2xl font-bold text-white mb-1">{{ pet.nombre }}</h3>
+              <p class="pet-breed text-olive-300 text-sm"><i class="fas fa-tag mr-1"></i>{{ pet.raza }}</p>
+            </div>
+          </div>
+
+          <!-- Información -->
+          <div class="p-5">
+            <div class="space-y-2 mb-4">
+              <div class="flex items-center text-gray-300">
+                <i class="fas fa-bone text-olive-500 w-5"></i>
+                <span class="text-sm ml-2">Raza: <span class="text-white font-medium">{{ pet.raza }}</span></span>
+              </div>
+              <div class="flex items-center text-gray-300">
+                <i class="fas fa-paw text-olive-500 w-5"></i>
+                <span class="text-sm ml-2">Especie: <span class="text-white font-medium">{{ pet.especie }}</span></span>
+              </div>
+              {% if pet.sexo %}
+              <div class="flex items-center text-gray-300">
+                <i class="fas fa-venus-mars text-olive-500 w-5"></i>
+                <span class="text-sm ml-2">Sexo: <span class="text-white font-medium">{{ pet.sexo }}</span></span>
+              </div>
+              {% endif %}
+              {% if pet.owner_nombre or pet.owner_email or pet.owner_telefono or pet.owner_documento or pet.owner_direccion %}
+              <div class="pt-3 mt-3 border-t border-dark-700 space-y-1 text-sm">
+                <p class="text-gray-400 font-semibold"><i class="fas fa-user mr-1 text-olive-500"></i>Propietario</p>
+                {% if pet.owner_nombre %}<p class="text-gray-300">{{ pet.owner_nombre }}</p>{% endif %}
+                {% if pet.owner_documento %}<p class="text-gray-400"><i class="fas fa-id-card w-4"></i> {{ pet.owner_tipo_documento }} {{ pet.owner_documento }}</p>{% endif %}
+                {% if pet.owner_email %}<p class="text-gray-400"><i class="fas fa-envelope w-4"></i> {{ pet.owner_email }}</p>{% endif %}
+                {% if pet.owner_telefono %}<p class="text-gray-400"><i class="fas fa-phone w-4"></i> {{ pet.owner_telefono }}</p>{% endif %}
+                {% if pet.owner_direccion %}<p class="text-gray-400"><i class="fas fa-map-marker-alt w-4"></i> {{ pet.owner_direccion }}</p>{% endif %}
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex space-x-2 pt-4 border-t border-dark-700">
+              <a href="{% url 'edit_paciente' pet.id %}"
+                 class="flex-1 bg-olive-700 hover:bg-olive-600 text-white text-center py-2 rounded-lg
+                        transition-colors duration-300 text-sm font-medium">
+                <i class="fas fa-edit mr-1"></i>Editar
+              </a>
+              <a href="{% url 'delete_paciente' pet.id %}"
+                 onclick="return confirm('¿Eliminar a {{ pet.nombre }}? Esta acción no se puede deshacer.')"
+                 class="flex-1 bg-red-900/50 hover:bg-red-900 text-red-300 hover:text-white text-center py-2 rounded-lg
+                        transition-colors duration-300 text-sm font-medium border border-red-700">
+                <i class="fas fa-trash-alt mr-1"></i>Eliminar
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Sin resultados -->
+    <div id="noResults" class="hidden bg-dark-800 border border-dark-700 rounded-xl p-12 text-center">
+      <div class="max-w-md mx-auto">
+        <div class="w-20 h-20 mx-auto mb-4 bg-dark-700 rounded-full flex items-center justify-center">
+          <i class="fas fa-search text-gray-600 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">Sin resultados</h3>
+        <p class="text-gray-400 mb-4">Ajusta los términos de búsqueda o los filtros</p>
+        <button onclick="clearSearch()" class="bg-olive-700 hover:bg-olive-600 text-white px-6 py-2 rounded-lg transition-colors">
+          <i class="fas fa-redo mr-2"></i>Limpiar búsqueda
+        </button>
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Estado vacío -->
+    <div class="bg-dark-800 border border-dark-700 rounded-2xl p-12 text-center">
+      <div class="max-w-md mx-auto">
+        <div class="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-olive-800 to-olive-700 rounded-full flex items-center justify-center shadow-2xl">
+          <i class="fas fa-dog text-white text-5xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-white mb-3">Aún no hay mascotas</h3>
+        <p class="text-gray-400 mb-6">Agrega tu primera mascota para llevar un registro de su salud y citas.</p>
+        <a href="{% url 'add_paciente' %}"
+           class="inline-flex items-center space-x-2 bg-gradient-to-r from-olive-700 to-olive-600
+                  hover:from-olive-600 hover:to-olive-500 text-white font-semibold px-8 py-3 rounded-lg
+                  transform hover:scale-105 transition-all duration-300 shadow-lg">
+          <i class="fas fa-plus-circle"></i>
+          <span>Agregar primera mascota</span>
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+<script>
+  let allCards = [];
+  document.addEventListener('DOMContentLoaded', function () {
+    allCards = Array.from(document.querySelectorAll('.pet-card'));
+    allCards.forEach((card, i) => {
+      card.style.opacity = '0'; card.style.transform = 'translateY(20px)';
+      setTimeout(() => { card.style.transition = 'all 0.5s ease-in-out'; card.style.opacity = '1'; card.style.transform = 'translateY(0)'; }, i * 100);
+    });
+  });
+
+  function searchPets() {
+    const searchTerm   = document.getElementById('searchInput').value.toLowerCase().trim();
+    const speciesFilter = document.getElementById('speciesFilter').value.toLowerCase();
+    let visible = 0;
+    allCards.forEach(card => {
+      const name    = card.dataset.name    || '';
+      const species = card.dataset.species || '';
+      const breed   = card.dataset.breed   || '';
+      const ok = (!searchTerm || name.includes(searchTerm) || species.includes(searchTerm) || breed.includes(searchTerm))
+              && (!speciesFilter || species.includes(speciesFilter));
+      card.style.display = ok ? '' : 'none';
+      if (ok) visible++;
+    });
+    document.getElementById('resultCount').textContent = visible;
+    document.getElementById('totalPets').textContent   = visible;
+    const noResults = document.getElementById('noResults');
+    const grid = document.getElementById('petsGrid');
+    if (visible === 0) { grid.style.display = 'none'; noResults.classList.remove('hidden'); }
+    else               { grid.style.display = 'grid'; noResults.classList.add('hidden'); }
+  }
+
+  function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('speciesFilter').value = '';
+    searchPets();
+  }
+
+  let t;
+  document.getElementById('searchInput').addEventListener('input', function () { clearTimeout(t); t = setTimeout(searchPets, 300); });
+</script>
+
+{% endblock %}

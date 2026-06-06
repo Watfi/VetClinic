@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Factura {{ venta.numero }}</title>
+</head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:24px 0;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+             style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(15,23,42,0.08);">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#4d7c0f 0%,#65a30d 100%);padding:28px 32px;color:#ffffff;">
+            <table width="100%"><tr>
+              <td>
+                <p style="margin:0;font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:.85;">Factura electrónica</p>
+                <h1 style="margin:6px 0 0;font-size:26px;font-weight:700;">{{ business }}</h1>
+              </td>
+              <td align="right" style="font-size:13px;line-height:1.5;">
+                <strong style="font-size:18px;">#{{ venta.numero }}</strong><br>
+                <span style="opacity:.85;">{{ venta.fecha|date:"Y-m-d H:i" }}</span>
+              </td>
+            </tr></table>
+          </td>
+        </tr>
+
+        <!-- Greeting -->
+        <tr>
+          <td style="padding:28px 32px 8px;">
+            <p style="margin:0 0 12px;font-size:16px;">Hola <strong>{{ venta.cliente_nombre|default:"Cliente" }}</strong>,</p>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#475569;">{{ mensaje }}</p>
+          </td>
+        </tr>
+
+        <!-- Total card -->
+        <tr>
+          <td style="padding:20px 32px 8px;">
+            <table width="100%" style="background:#f7fee7;border:1px solid #d9f99d;border-radius:10px;padding:18px;">
+              <tr>
+                <td>
+                  <p style="margin:0;font-size:11px;letter-spacing:2px;color:#4d7c0f;text-transform:uppercase;">Total a pagar</p>
+                  <p style="margin:4px 0 0;font-size:28px;font-weight:700;color:#1e293b;">${{ venta.total|floatformat:2 }}</p>
+                </td>
+                <td align="right">
+                  <p style="margin:0;font-size:11px;color:#64748b;">Método de pago</p>
+                  <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#1e293b;">{{ venta.metodo_pago }}</p>
+                  <p style="margin:8px 0 0;display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;
+                            background:{% if venta.estado == 'Pagada' %}#dcfce7;color:#166534{% else %}#fee2e2;color:#991b1b{% endif %};">
+                    {{ venta.estado }}
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Items -->
+        <tr>
+          <td style="padding:18px 32px 8px;">
+            <p style="margin:0 0 8px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#64748b;">Detalle</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;">
+              <thead>
+                <tr style="background:#f1f5f9;">
+                  <th align="left"  style="padding:8px 10px;color:#475569;font-weight:600;">Producto</th>
+                  <th align="center" style="padding:8px 10px;color:#475569;font-weight:600;">Cant.</th>
+                  <th align="right" style="padding:8px 10px;color:#475569;font-weight:600;">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for it in items %}
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:10px;">{{ it.nombre }}{% if it.sku %}<br><span style="font-size:11px;color:#94a3b8;">SKU {{ it.sku }}</span>{% endif %}</td>
+                  <td align="center" style="padding:10px;">{{ it.cantidad }}</td>
+                  <td align="right" style="padding:10px;">${{ it.subtotal|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Attachment notice -->
+        <tr>
+          <td style="padding:8px 32px 24px;">
+            <table width="100%" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;">
+              <tr>
+                <td style="font-size:13px;color:#1e40af;">
+                  📎 Encontrarás la factura en PDF adjunta a este correo.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#0f172a;padding:20px 32px;color:#cbd5e1;font-size:12px;line-height:1.6;">
+            <strong style="color:#ffffff;">{{ business }}</strong><br>
+            {% if business_nit %}NIT: {{ business_nit }} · {% endif %}{% if business_phone %}Tel: {{ business_phone }}{% endif %}<br>
+            {% if business_address %}{{ business_address }}<br>{% endif %}
+            <span style="color:#64748b;">Documento generado electrónicamente, no requiere firma.</span>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,30 @@
+# Django
+*.pyc
+__pycache__/
+db.sqlite3
+db.sqlite3.bak
+staticfiles/
+media/
+server.log
+
+# Environments
+.env
+venv/
+ENV/
+env/
+
+# Electron / Node
+node_modules/
+dist/
+dist-electron/
+build/
+.claude/
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp

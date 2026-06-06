@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="space-y-6 max-w-7xl mx-auto">
+
+  <!-- Encabezado -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-white flex items-center">
+        <i class="fas fa-users text-olive-500 mr-3"></i>Pacientes
+      </h1>
+      <p class="text-gray-400 mt-1">Gestiona propietarios y sus mascotas</p>
+    </div>
+    <a href="{% url 'add_paciente' %}"
+       class="inline-flex items-center space-x-2 bg-gradient-to-r from-olive-700 to-olive-600
+              hover:from-olive-600 hover:to-olive-500 text-white font-semibold px-6 py-3 rounded-lg
+              transform hover:scale-105 transition-all duration-300 shadow-lg">
+      <i class="fas fa-user-plus"></i>
+      <span>Registrar Propietario</span>
+    </a>
+  </div>
+
+  <!-- Mensajes -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %}">
+        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>{{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Buscador -->
+  <div class="bg-dark-800 border border-dark-700 rounded-xl p-5 shadow-xl">
+    <div class="flex flex-col md:flex-row gap-3">
+      <div class="flex-1 relative">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+        <input type="text" id="searchInput"
+               placeholder="Buscar por nombre, correo, cédula o teléfono..."
+               class="w-full bg-dark-900 border border-dark-600 rounded-lg pl-11 pr-4 py-3 text-white
+                      focus:outline-none focus:ring-2 focus:ring-olive-600">
+      </div>
+      <button onclick="clearSearch()"
+              class="bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white px-5 py-3 rounded-lg
+                     border border-dark-600 hover:border-olive-600 transition-all">
+        <i class="fas fa-times mr-2"></i>Limpiar
+      </button>
+    </div>
+    <p class="text-sm text-gray-400 mt-3">
+      <span id="resultCount">{{ propietarios|length }}</span> propietarios encontrados
+    </p>
+  </div>
+
+  {% if propietarios %}
+    <!-- Tabla -->
+    <div class="bg-dark-800 border border-dark-700 rounded-xl overflow-hidden shadow-xl">
+      <div class="overflow-x-auto">
+        <table class="min-w-full" id="propietariosTable">
+          <thead class="bg-dark-900 border-b border-dark-700">
+            <tr>
+              <th class="px-5 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Propietario</th>
+              <th class="px-5 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Documento</th>
+              <th class="px-5 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Contacto</th>
+              <th class="px-5 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Mascotas</th>
+              <th class="px-5 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-dark-700" id="propietariosBody">
+            {% for p in propietarios %}
+              <tr class="prop-row hover:bg-dark-700/50 transition-colors"
+                  data-nombre="{{ p.nombre|lower }}"
+                  data-email="{{ p.email|lower }}"
+                  data-doc="{{ p.numero_documento|lower }}"
+                  data-tel="{{ p.telefono|lower }}">
+
+                <!-- Nombre + ciudad -->
+                <td class="px-5 py-4">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-olive-700 to-olive-600
+                                flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                      {{ p.nombre|slice:":1"|upper|default:"?" }}
+                    </div>
+                    <div>
+                      <p class="text-white font-semibold">{{ p.nombre|default:"Sin nombre" }}</p>
+                      {% if p.ciudad %}<p class="text-gray-400 text-xs">{{ p.ciudad }}</p>{% endif %}
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Documento -->
+                <td class="px-5 py-4 hidden md:table-cell">
+                  {% if p.numero_documento %}
+                    <p class="text-gray-300 text-sm">{{ p.tipo_documento_display }} {{ p.numero_documento }}</p>
+                  {% else %}
+                    <span class="text-gray-600 text-sm">—</span>
+                  {% endif %}
+                </td>
+
+                <!-- Contacto -->
+                <td class="px-5 py-4 hidden md:table-cell">
+                  <div class="space-y-1">
+                    {% if p.telefono %}
+                      <p class="text-gray-300 text-sm"><i class="fas fa-phone text-olive-500 w-4"></i> {{ p.telefono }}</p>
+                    {% endif %}
+                    {% if p.email %}
+                      <p class="text-gray-300 text-sm"><i class="fas fa-envelope text-olive-500 w-4"></i> {{ p.email }}</p>
+                    {% endif %}
+                    {% if not p.telefono and not p.email %}
+                      <span class="text-gray-600 text-sm">—</span>
+                    {% endif %}
+                  </div>
+                </td>
+
+                <!-- Mascotas count + ver -->
+                <td class="px-5 py-4 text-center">
+                  <a href="{% url 'mascotas_propietario' propietario_id=p.id %}"
+                     class="inline-flex flex-col items-center group">
+                    <span class="text-2xl font-bold text-white group-hover:text-olive-400 transition-colors">{{ p.num_mascotas }}</span>
+                    <span class="text-xs text-gray-400 group-hover:text-olive-400 transition-colors">
+                      <i class="fas fa-paw mr-1"></i>ver
+                    </span>
+                  </a>
+                </td>
+
+                <!-- Acciones -->
+                <td class="px-5 py-4">
+                  <div class="flex items-center justify-end gap-2 flex-wrap">
+                    <!-- Registrar mascota -->
+                    <a href="{% url 'add_mascota' propietario_id=p.id %}"
+                       class="inline-flex items-center bg-olive-700 hover:bg-olive-600 text-white
+                              text-xs font-medium px-3 py-2 rounded-lg transition-colors">
+                      <i class="fas fa-paw mr-1"></i>+ Mascota
+                    </a>
+                    <!-- Ver mascotas -->
+                    <a href="{% url 'mascotas_propietario' propietario_id=p.id %}"
+                       class="inline-flex items-center bg-blue-700 hover:bg-blue-600 text-white
+                              text-xs font-medium px-3 py-2 rounded-lg transition-colors">
+                      <i class="fas fa-list mr-1"></i>Mascotas
+                    </a>
+                    <!-- Editar propietario -->
+                    <a href="{% url 'edit_propietario' id=p.id %}"
+                       class="inline-flex items-center bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white
+                              text-xs font-medium px-3 py-2 rounded-lg border border-dark-600 transition-colors">
+                      <i class="fas fa-edit mr-1"></i>Editar
+                    </a>
+                    <!-- Eliminar -->
+                    <a href="{% url 'delete_propietario' id=p.id %}"
+                       onclick="return confirm('¿Eliminar al propietario {{ p.nombre }}? Se eliminarán también sus mascotas.')"
+                       class="inline-flex items-center bg-red-900/30 hover:bg-red-900 text-red-300 hover:text-white
+                              text-xs font-medium px-3 py-2 rounded-lg border border-red-700 transition-colors">
+                      <i class="fas fa-trash-alt mr-1"></i>Eliminar
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Sin resultados de búsqueda -->
+      <div id="noResults" class="hidden p-12 text-center">
+        <i class="fas fa-search text-gray-600 text-4xl mb-3"></i>
+        <p class="text-gray-400">No se encontraron propietarios con ese criterio.</p>
+        <button onclick="clearSearch()" class="mt-3 bg-olive-700 hover:bg-olive-600 text-white px-5 py-2 rounded-lg transition-colors text-sm">
+          <i class="fas fa-redo mr-1"></i>Limpiar búsqueda
+        </button>
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Estado vacío -->
+    <div class="bg-dark-800 border border-dark-700 rounded-2xl p-12 text-center">
+      <div class="w-28 h-28 mx-auto mb-6 bg-gradient-to-br from-olive-800 to-olive-700 rounded-full flex items-center justify-center shadow-2xl">
+        <i class="fas fa-users text-white text-5xl"></i>
+      </div>
+      <h3 class="text-2xl font-bold text-white mb-3">Aún no hay propietarios</h3>
+      <p class="text-gray-400 mb-6">Comienza registrando el primer propietario para luego agregar sus mascotas.</p>
+      <a href="{% url 'add_paciente' %}"
+         class="inline-flex items-center space-x-2 bg-gradient-to-r from-olive-700 to-olive-600
+                hover:from-olive-600 hover:to-olive-500 text-white font-semibold px-8 py-3 rounded-lg
+                transform hover:scale-105 transition-all duration-300 shadow-lg">
+        <i class="fas fa-user-plus"></i>
+        <span>Registrar primer propietario</span>
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+
+<script>
+  const rows = Array.from(document.querySelectorAll('.prop-row'));
+
+  function searchPropietarios() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    let visible = 0;
+    rows.forEach(r => {
+      const match = !q ||
+        r.dataset.nombre.includes(q) ||
+        r.dataset.email.includes(q) ||
+        r.dataset.doc.includes(q) ||
+        r.dataset.tel.includes(q);
+      r.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    document.getElementById('resultCount').textContent = visible;
+    const noRes = document.getElementById('noResults');
+    const tbody = document.getElementById('propietariosBody');
+    if (noRes) noRes.classList.toggle('hidden', visible > 0);
+  }
+
+  function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    searchPropietarios();
+  }
+
+  document.getElementById('searchInput').addEventListener('input', function () {
+    clearTimeout(this._t);
+    this._t = setTimeout(searchPropietarios, 250);
+  });
+</script>
+
+{% endblock %}

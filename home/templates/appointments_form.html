@@ -1,0 +1,681 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="max-w-5xl mx-auto space-y-6">
+
+  <!-- Breadcrumb -->
+  <div class="flex items-center space-x-2 text-sm text-gray-400">
+    <a href="{% url 'list_citas' %}" class="hover:text-olive-400 transition-colors">
+      <i class="fas fa-calendar-alt mr-1"></i>Citas
+    </a>
+    <i class="fas fa-chevron-right text-xs"></i>
+    <span class="text-white">{% if action == 'Add' %}Nueva{% else %}Editar{% endif %} Cita</span>
+  </div>
+
+  <!-- Header -->
+  <div class="flex items-center space-x-4">
+    <div class="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+      <i class="fas {% if action == 'Add' %}fa-calendar-plus{% else %}fa-calendar-edit{% endif %} text-white text-2xl"></i>
+    </div>
+    <div>
+      <h1 class="text-3xl font-bold text-white">
+        {% if action == 'Add' %}Agendar Cita{% else %}Editar Cita{% endif %}
+      </h1>
+      <p class="text-gray-400">
+        {% if action == 'Add' %}Crea una nueva cita{% else %}Actualiza la información de la cita{% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="p-4 rounded-lg {% if message.tags == 'success' %}bg-green-900/30 border border-green-700 text-green-300{% elif message.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-blue-900/30 border border-blue-700 text-blue-300{% endif %}">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-2"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Form -->
+  <div class="grid lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-2">
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-8 shadow-xl">
+        <form method="POST"
+              action="{% if action == 'Edit' %}{% url 'edit_cita' cita.id_str %}{% else %}{% url 'add_cita' %}{% endif %}"
+              class="space-y-6" id="appointmentForm">
+          {% csrf_token %}
+
+          <!-- ── STEP 1: Appointment type selector ── -->
+          <div>
+            <p class="block text-gray-300 mb-3 font-semibold text-lg">
+              <i class="fas fa-layer-group text-olive-500 mr-2"></i>Tipo de cita *
+            </p>
+            <div class="grid grid-cols-2 gap-4" id="tipoSelector">
+
+              <label id="btnMedica"
+                     class="tipo-btn flex flex-col items-center justify-center gap-2 p-5 rounded-xl border-2 cursor-pointer transition-all duration-200
+                            {% if tipo_sel == 'Peluqueria' %}border-dark-600 bg-dark-900 text-gray-400{% else %}border-olive-600 bg-olive-900/30 text-white{% endif %}">
+                <input type="radio" name="tipo" value="Medica" class="hidden"
+                       {% if tipo_sel != 'Peluqueria' %}checked{% endif %}>
+                <span class="text-4xl">🩺</span>
+                <span class="font-semibold text-sm">Veterinaria</span>
+                <span class="text-xs text-gray-400">Consulta médica</span>
+              </label>
+
+              <label id="btnPeluqueria"
+                     class="tipo-btn flex flex-col items-center justify-center gap-2 p-5 rounded-xl border-2 cursor-pointer transition-all duration-200
+                            {% if tipo_sel == 'Peluqueria' %}border-pink-500 bg-pink-900/30 text-white{% else %}border-dark-600 bg-dark-900 text-gray-400{% endif %}">
+                <input type="radio" name="tipo" value="Peluqueria" class="hidden"
+                       {% if tipo_sel == 'Peluqueria' %}checked{% endif %}>
+                <span class="text-4xl">✂️</span>
+                <span class="font-semibold text-sm">Peluquería</span>
+                <span class="text-xs text-gray-400">Baño y peluquería</span>
+              </label>
+
+            </div>
+          </div>
+
+          <!-- STEP 2: Propietario search + Mascota filter -->
+          <div class="space-y-3">
+            <!-- Búsqueda de propietario -->
+            <div>
+              <label class="block text-gray-300 mb-2 font-medium">
+                <i class="fas fa-user text-olive-500 mr-2"></i>Buscar propietario *
+              </label>
+              <div class="relative">
+                <input type="text" id="propSearch" placeholder="Escribe el nombre o documento del propietario..."
+                       autocomplete="off"
+                       class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                              focus:outline-none focus:ring-2 focus:ring-olive-600 transition-all duration-300 pr-10">
+                <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                <!-- Dropdown de sugerencias -->
+                <div id="propDropdown"
+                     class="hidden absolute z-30 bg-dark-800 border border-dark-600 rounded-xl shadow-2xl top-full left-0 mt-1 max-h-52 overflow-y-auto w-full">
+                </div>
+              </div>
+              <input type="hidden" id="propietarioSelected" value="{{ prop_presel|default:'' }}">
+              <div id="propSelectedBadge" class="hidden mt-2 flex items-center gap-2 bg-olive-900/30 border border-olive-700 rounded-lg px-3 py-2">
+                <i class="fas fa-user-check text-olive-400 text-sm"></i>
+                <span id="propSelectedName" class="text-white text-sm font-medium"></span>
+                <button type="button" onclick="clearProp()" class="ml-auto text-gray-500 hover:text-red-400 text-xs">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Mascota (filtrada por propietario) -->
+            <div>
+              <label for="paciente" class="block text-gray-300 mb-2 font-medium">
+                <i class="fas fa-paw text-olive-500 mr-2"></i>Mascota *
+              </label>
+              <select name="paciente" id="paciente" required
+                      class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                             focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                             transition-all duration-300">
+                <option value="">-- Selecciona primero un propietario --</option>
+              </select>
+              <p id="noMascotasMsg" class="hidden text-yellow-400 text-xs mt-1">
+                <i class="fas fa-exclamation-triangle mr-1"></i>Este propietario no tiene mascotas registradas.
+              </p>
+            </div>
+          </div>
+
+          <!-- Datos ocultos para JS — |safe evita que Django escape las comillas del JSON -->
+          <script>
+            const PROPIETARIOS    = {{ propietarios_json|safe }};
+            const MASCOTAS_BY_PROP = {{ mascotas_json|safe }};
+            let propSelectedId = "{{ prop_presel|default:'' }}";
+            const CITA_PACIENTE = "{% if cita %}{{ cita.id_paciente }}{% endif %}";
+
+            // Pre-cargar si viene de edición
+            window.addEventListener('DOMContentLoaded', () => {
+              if (propSelectedId) {
+                const p = PROPIETARIOS.find(x => x.id == propSelectedId);
+                if (p) selectProp(p, false);
+              }
+            });
+
+            const propSearch = document.getElementById('propSearch');
+            const propDropdown = document.getElementById('propDropdown');
+
+            propSearch.addEventListener('input', function() {
+              const q = this.value.trim().toLowerCase();
+              if (!q) { propDropdown.classList.add('hidden'); return; }
+              const matches = PROPIETARIOS.filter(p =>
+                p.nombre.toLowerCase().includes(q) ||
+                p.documento.toLowerCase().includes(q) ||
+                p.telefono.includes(q)
+              ).slice(0, 8);
+
+              if (!matches.length) {
+                propDropdown.innerHTML = '<div class="px-4 py-3 text-gray-500 text-sm">Sin resultados</div>';
+              } else {
+                propDropdown.innerHTML = matches.map(p => `
+                  <div onclick='selectProp(${JSON.stringify(p)})'
+                       class="px-4 py-3 hover:bg-dark-700 cursor-pointer border-b border-dark-700 last:border-0">
+                    <p class="text-white text-sm font-medium">${p.nombre}</p>
+                    <p class="text-gray-500 text-xs">${p.documento ? 'Doc: '+p.documento : ''}${p.telefono ? ' · '+p.telefono : ''}</p>
+                  </div>`).join('');
+              }
+              propDropdown.classList.remove('hidden');
+            });
+
+            document.addEventListener('click', e => {
+              if (!e.target.closest('#propSearch') && !e.target.closest('#propDropdown'))
+                propDropdown.classList.add('hidden');
+            });
+
+            function selectProp(p, clearSearch = true) {
+              propSelectedId = p.id;
+              document.getElementById('propietarioSelected').value = p.id;
+              document.getElementById('propSelectedName').textContent = p.nombre;
+              document.getElementById('propSelectedBadge').classList.remove('hidden');
+              if (clearSearch) {
+                propSearch.value = '';
+                propDropdown.classList.add('hidden');
+              } else {
+                propSearch.value = p.nombre;
+              }
+              loadMascotas(p.id);
+            }
+
+            function clearProp() {
+              propSelectedId = '';
+              document.getElementById('propietarioSelected').value = '';
+              document.getElementById('propSelectedBadge').classList.add('hidden');
+              propSearch.value = '';
+              const sel = document.getElementById('paciente');
+              sel.innerHTML = '<option value="">-- Selecciona primero un propietario --</option>';
+              document.getElementById('noMascotasMsg').classList.add('hidden');
+            }
+
+            function loadMascotas(propId) {
+              const mascotas = MASCOTAS_BY_PROP[String(propId)] || [];
+              const sel = document.getElementById('paciente');
+              const noMsg = document.getElementById('noMascotasMsg');
+              if (!mascotas.length) {
+                sel.innerHTML = '<option value="">Sin mascotas</option>';
+                noMsg.classList.remove('hidden');
+                return;
+              }
+              noMsg.classList.add('hidden');
+              sel.innerHTML = '<option value="">-- Selecciona una mascota --</option>' +
+                mascotas.map(m =>
+                  `<option value="${m.id}" ${CITA_PACIENTE == m.id ? 'selected' : ''}>${m.nombre} (${m.especie})</option>`
+                ).join('');
+            }
+          </script>
+
+          <!-- Professional Selection (filtered by tipo) -->
+          <div class="group">
+            <label for="veterinario" class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-user-md text-olive-500 mr-2" id="vetIcon"></i>
+              <span id="vetLabel">Profesional *</span>
+            </label>
+            <select name="veterinario" id="veterinario" required
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                           focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                           transition-all duration-300">
+              <option value="">-- Selecciona un profesional --</option>
+              {% for v in vets %}
+                <option value="{{ v.id }}"
+                        data-medica="{{ v.ofrece_consulta_medica|yesno:'true,false' }}"
+                        data-peluqueria="{{ v.ofrece_peluqueria|yesno:'true,false' }}"
+                        {% if cita and cita.id_veterinario == v.id %}selected{% endif %}>
+                  {{ v.nombre }} — {{ v.especialidad }}
+                  {% if v.ofrece_consulta_medica %}🩺{% endif %}{% if v.ofrece_peluqueria %}✂️{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+            <p class="text-xs text-gray-500 mt-1" id="vetHint">
+              <i class="fas fa-info-circle mr-1"></i>Solo se muestran profesionales que ofrecen el servicio seleccionado.
+            </p>
+          </div>
+
+          <!-- Date & Time -->
+          <div class="group">
+            <label for="fecha" class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-calendar-alt text-olive-500 mr-2"></i>Fecha y Hora *
+            </label>
+            <input type="datetime-local"
+                   id="fecha" name="fecha" required
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                          focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                          transition-all duration-300"
+                   {% if cita %}value="{{ cita.fecha_original }}"{% endif %}>
+            <div class="mt-2 p-3 bg-blue-900/20 border border-blue-700 rounded-lg">
+              <p class="text-xs text-blue-300">
+                <i class="fas fa-clock mr-2"></i>
+                <strong>Horario de Atención:</strong> Lunes a Viernes, 8:00 AM – 7:00 PM &nbsp;|&nbsp;
+                <strong>Almuerzo:</strong> 12:00 PM – 2:00 PM (sin citas)
+              </p>
+            </div>
+          </div>
+
+          <!-- Reason (filtered by tipo) -->
+          <div class="group">
+            <label for="motivo" class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-notes-medical text-olive-500 mr-2"></i>Motivo *
+            </label>
+            <select name="motivo" id="motivo" required
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                           focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                           transition-all duration-300">
+              <option value="">-- Selecciona un motivo --</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">
+              <i class="fas fa-info-circle mr-1"></i><span id="motivoPriceHint">Selecciona un tipo de cita para ver los motivos disponibles.</span>
+            </p>
+          </div>
+
+          <!-- Duration -->
+          {% if rol == 'Veterinario' or rol == 'Administrador' %}
+          <div class="group">
+            <label for="duracion" class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-clock text-olive-500 mr-2"></i>Duración (minutos) <span class="text-gray-500 text-sm">— opcional</span>
+            </label>
+            <input type="number" name="duracion" id="duracion" min="5" step="5" placeholder="Ej: 30"
+                   value="{% if cita %}{{ cita.duracion }}{% endif %}"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                          focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                          transition-all duration-300">
+          </div>
+          {% endif %}
+
+          <!-- Buttons -->
+          <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-dark-700">
+            <button type="submit"
+                    class="flex-1 bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-600 hover:to-olive-500
+                           text-white font-semibold py-3 rounded-lg transition-all duration-300 shadow-lg
+                           flex items-center justify-center">
+              <i class="fas {% if action == 'Edit' %}fa-save{% else %}fa-calendar-check{% endif %} mr-2"></i>
+              {% if action == 'Edit' %}Guardar Cambios{% else %}Agendar Cita{% endif %}
+            </button>
+            <a href="{% url 'list_citas' %}"
+               class="flex-1 bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white font-semibold py-3 rounded-lg
+                      transition-all duration-300 border border-dark-600 flex items-center justify-center">
+              <i class="fas fa-times mr-2"></i>Cancelar
+            </a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="lg:col-span-1 space-y-6">
+
+      <!-- Summary -->
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl sticky top-6">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+          <i class="fas fa-eye text-olive-500 mr-2"></i>Resumen
+        </h3>
+        <div class="space-y-3 text-sm">
+          <div class="flex items-start space-x-2">
+            <span class="mt-0.5 w-5 text-center" id="summaryTipoIcon">🩺</span>
+            <div>
+              <p class="text-gray-500 text-xs">Tipo</p>
+              <p class="text-white" id="summaryTipo">Veterinaria</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-2">
+            <i class="fas fa-paw text-olive-500 mt-0.5 w-5"></i>
+            <div>
+              <p class="text-gray-500 text-xs">Mascota</p>
+              <p class="text-white" id="summaryPet">Selecciona una mascota…</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-2">
+            <i class="fas fa-user-md text-purple-500 mt-0.5 w-5"></i>
+            <div>
+              <p class="text-gray-500 text-xs">Profesional</p>
+              <p class="text-white" id="summaryVet">Selecciona un profesional…</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-2">
+            <i class="fas fa-calendar text-blue-500 mt-0.5 w-5"></i>
+            <div>
+              <p class="text-gray-500 text-xs">Fecha y Hora</p>
+              <p class="text-white" id="summaryDate">Selecciona una fecha…</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Office hours notice -->
+      <div class="bg-yellow-900/20 border border-yellow-700 rounded-xl p-4">
+        <div class="flex items-start space-x-2">
+          <i class="fas fa-clock text-yellow-500 mt-0.5"></i>
+          <div class="text-xs text-yellow-300">
+            <p class="font-semibold mb-1">Horario de Atención</p>
+            <p>Lun–Vie · 8:00 AM – 7:00 PM</p>
+            <p>Descanso de almuerzo: 12:00 PM – 2:00 PM</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini calendario de disponibilidad (solo lectura) -->
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-4 shadow-xl">
+        <div class="flex items-center justify-between mb-3">
+          <button type="button" id="calPrev" class="w-7 h-7 rounded-md bg-dark-900 hover:bg-olive-700 text-gray-300 hover:text-white flex items-center justify-center transition-colors">
+            <i class="fas fa-chevron-left text-xs"></i>
+          </button>
+          <h4 class="text-sm font-bold text-white" id="calTitle">—</h4>
+          <button type="button" id="calNext" class="w-7 h-7 rounded-md bg-dark-900 hover:bg-olive-700 text-gray-300 hover:text-white flex items-center justify-center transition-colors">
+            <i class="fas fa-chevron-right text-xs"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wider text-gray-500 mb-1">
+          <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
+        </div>
+        <div id="calGrid" class="grid grid-cols-7 gap-1"></div>
+
+        <div class="mt-3 pt-3 border-t border-dark-600">
+          <p class="text-[11px] text-gray-500 mb-2 flex items-center justify-between">
+            <span><i class="fas fa-calendar-day text-olive-500 mr-1"></i>Citas del día</span>
+            <span id="calSelDate" class="text-olive-400 font-semibold"></span>
+          </p>
+          <div id="calDayList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+            <p class="text-xs text-gray-500 italic">Selecciona un día para ver las citas agendadas.</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 mt-3 pt-3 border-t border-dark-600 text-[10px] text-gray-500">
+          <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-olive-500"></span>1-2</span>
+          <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>3-5</span>
+          <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>6+</span>
+          <span class="ml-auto italic">Solo visualización</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ── Data from Django ──────────────────────────────────────────
+  const VETS_DATA = [
+    {% for v in vets %}
+    {
+      id: "{{ v.id }}",
+      nombre: "{{ v.nombre|escapejs }}",
+      especialidad: "{{ v.especialidad|escapejs }}",
+      medica: {{ v.ofrece_consulta_medica|yesno:"true,false" }},
+      peluqueria: {{ v.ofrece_peluqueria|yesno:"true,false" }},
+    },
+    {% endfor %}
+  ];
+
+  const TARIFAS_DATA = {{ tarifas_json|safe }};
+
+  const SELECTED_VET_ID = "{{ cita.id_veterinario|default:'' }}";
+  const SELECTED_TIPO   = "{{ tipo_sel|default:'Medica' }}";
+  const SELECTED_MOTIVO = "{{ cita.motivo|default:''|escapejs }}";
+
+  // ── DOM refs ──────────────────────────────────────────────────
+  const tipoInputs  = document.querySelectorAll('input[name="tipo"]');
+  const btnMedica   = document.getElementById('btnMedica');
+  const btnPelo     = document.getElementById('btnPeluqueria');
+  const vetSelect   = document.getElementById('veterinario');
+  const motivoSel   = document.getElementById('motivo');
+  const pacienteSel = document.getElementById('paciente');
+  const fechaInput  = document.getElementById('fecha');
+
+  // Summary els
+  const sTipoIcon = document.getElementById('summaryTipoIcon');
+  const sTipo     = document.getElementById('summaryTipo');
+  const sPet      = document.getElementById('summaryPet');
+  const sVet      = document.getElementById('summaryVet');
+  const sDate     = document.getElementById('summaryDate');
+
+  // ── Tipo selector visuals ─────────────────────────────────────
+  function setTipoUI(tipo) {
+    if (tipo === 'Peluqueria') {
+      btnMedica.className = btnMedica.className
+        .replace('border-olive-600 bg-olive-900/30 text-white', 'border-dark-600 bg-dark-900 text-gray-400');
+      btnPelo.className = btnPelo.className
+        .replace('border-dark-600 bg-dark-900 text-gray-400', 'border-pink-500 bg-pink-900/30 text-white');
+    } else {
+      btnPelo.className = btnPelo.className
+        .replace('border-pink-500 bg-pink-900/30 text-white', 'border-dark-600 bg-dark-900 text-gray-400');
+      btnMedica.className = btnMedica.className
+        .replace('border-dark-600 bg-dark-900 text-gray-400', 'border-olive-600 bg-olive-900/30 text-white');
+    }
+    sTipoIcon.textContent = tipo === 'Peluqueria' ? '✂️' : '🩺';
+    sTipo.textContent     = tipo === 'Peluqueria' ? 'Peluquería' : 'Veterinaria';
+  }
+
+  // ── Filter vet dropdown ───────────────────────────────────────
+  function filterVets(tipo) {
+    const cur = vetSelect.value;
+    while (vetSelect.options.length > 1) vetSelect.remove(1);
+
+    const key = tipo === 'Peluqueria' ? 'peluqueria' : 'medica';
+    VETS_DATA.forEach(v => {
+      if (!v[key]) return;
+      const opt = document.createElement('option');
+      opt.value = v.id;
+      let badges = '';
+      if (v.medica)     badges += '🩺';
+      if (v.peluqueria) badges += '✂️';
+      opt.textContent = `${v.nombre} — ${v.especialidad} ${badges}`;
+      if (v.id === cur || v.id === SELECTED_VET_ID) opt.selected = true;
+      vetSelect.appendChild(opt);
+    });
+    updateVetSummary();
+  }
+
+  // ── Filter motivo dropdown ────────────────────────────────────
+  function filterMotivos(tipo) {
+    const categoria = tipo === 'Peluqueria' ? 'Peluqueria' : 'Medica';
+
+    // Filter tarifas by selected categoria
+    const filteredTarifas = TARIFAS_DATA.filter(t => t.categoria === categoria);
+
+    // Clear and rebuild motivo options
+    motivoSel.innerHTML = '<option value="">-- Selecciona un motivo --</option>';
+
+    if (!filteredTarifas.length) {
+      const priceHint = document.getElementById('motivoPriceHint');
+      if (priceHint) {
+        priceHint.textContent = 'No hay tarifas disponibles para este tipo de cita.';
+      }
+      return;
+    }
+
+    // Add options from filtered tarifas
+    filteredTarifas.forEach(tarifa => {
+      const opt = document.createElement('option');
+      opt.value = tarifa.tipo;
+      opt.textContent = `${tarifa.tipo} — $${parseFloat(tarifa.precio).toFixed(0)}`;
+      opt.dataset.precio = tarifa.precio;
+      motivoSel.appendChild(opt);
+    });
+
+    // Restore selected motivo if it matches filtered category
+    if (SELECTED_MOTIVO) {
+      const selectedTarifa = filteredTarifas.find(t => t.tipo === SELECTED_MOTIVO);
+      if (selectedTarifa) {
+        motivoSel.value = SELECTED_MOTIVO;
+      }
+    }
+
+    const priceHint = document.getElementById('motivoPriceHint');
+    if (priceHint) {
+      priceHint.textContent = filteredTarifas.length > 0 ? 'El precio se mostrará al seleccionar un motivo.' : 'No hay tarifas disponibles.';
+    }
+  }
+
+  // ── Summary updates ───────────────────────────────────────────
+  function updateVetSummary() {
+    const opt = vetSelect.options[vetSelect.selectedIndex];
+    sVet.textContent = opt && opt.value ? opt.text : 'Selecciona un profesional…';
+  }
+
+  function updatePetSummary() {
+    const opt = pacienteSel.options[pacienteSel.selectedIndex];
+    sPet.textContent = opt && opt.value ? opt.text : 'Selecciona una mascota…';
+  }
+
+  function updateDateSummary() {
+    if (fechaInput.value) {
+      const d = new Date(fechaInput.value);
+      sDate.textContent = d.toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+    } else {
+      sDate.textContent = 'Selecciona una fecha…';
+    }
+  }
+
+  // ── Apply tipo change ─────────────────────────────────────────
+  function applyTipo(tipo) {
+    setTipoUI(tipo);
+    filterVets(tipo);
+    filterMotivos(tipo);
+  }
+
+  // ── Wire up tipo radio buttons ────────────────────────────────
+  tipoInputs.forEach(radio => {
+    radio.addEventListener('change', () => applyTipo(radio.value));
+  });
+
+  btnMedica.addEventListener('click', () => {
+    document.querySelector('input[name="tipo"][value="Medica"]').checked = true;
+    applyTipo('Medica');
+  });
+  btnPelo.addEventListener('click', () => {
+    document.querySelector('input[name="tipo"][value="Peluqueria"]').checked = true;
+    applyTipo('Peluqueria');
+  });
+
+  vetSelect.addEventListener('change', updateVetSummary);
+  pacienteSel.addEventListener('change', updatePetSummary);
+  fechaInput.addEventListener('change', updateDateSummary);
+
+  // ── Init ──────────────────────────────────────────────────────
+  applyTipo(SELECTED_TIPO);
+  if (SELECTED_MOTIVO) motivoSel.value = SELECTED_MOTIVO;
+  updatePetSummary();
+  updateDateSummary();
+})();
+</script>
+
+<!-- ── Mini calendario de disponibilidad ───────────────────────── -->
+<script>
+(function () {
+  const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
+                  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const today = new Date();
+  let curYear  = today.getFullYear();
+  let curMonth = today.getMonth() + 1; // 1-12
+  let dataCache = {};
+  let selectedDateIso = null;
+
+  const $title = document.getElementById('calTitle');
+  const $grid  = document.getElementById('calGrid');
+  const $list  = document.getElementById('calDayList');
+  const $sel   = document.getElementById('calSelDate');
+  const $prev  = document.getElementById('calPrev');
+  const $next  = document.getElementById('calNext');
+  if (!$grid) return;
+
+  function dotColor(n) {
+    if (n >= 6) return 'bg-red-500';
+    if (n >= 3) return 'bg-yellow-500';
+    return 'bg-olive-500';
+  }
+
+  function render() {
+    $title.textContent = `${MONTHS[curMonth-1]} ${curYear}`;
+    $grid.innerHTML = '';
+
+    const first = new Date(curYear, curMonth - 1, 1);
+    // Convert Sun=0..Sat=6 to Mon=0..Sun=6
+    let offset = (first.getDay() + 6) % 7;
+    const lastDay = new Date(curYear, curMonth, 0).getDate();
+    const todayIso = new Date().toISOString().slice(0, 10);
+
+    for (let i = 0; i < offset; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'h-9';
+      $grid.appendChild(cell);
+    }
+
+    for (let d = 1; d <= lastDay; d++) {
+      const iso = `${curYear}-${String(curMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const items = (dataCache.days || {})[iso] || [];
+      const cnt = items.length;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.iso = iso;
+      btn.className = 'relative h-9 rounded-md text-xs font-medium transition-colors flex flex-col items-center justify-center ' +
+        (iso === selectedDateIso
+          ? 'bg-olive-600 text-white ring-2 ring-olive-400'
+          : (iso === todayIso
+              ? 'bg-dark-900 text-olive-400 ring-1 ring-olive-600 hover:bg-olive-700 hover:text-white'
+              : 'bg-dark-900 text-gray-300 hover:bg-olive-700 hover:text-white'));
+      btn.innerHTML = `<span>${d}</span>` + (cnt
+        ? `<span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${dotColor(cnt)}"></span>`
+        : '');
+      btn.addEventListener('click', () => selectDay(iso));
+      $grid.appendChild(btn);
+    }
+  }
+
+  function selectDay(iso) {
+    selectedDateIso = iso;
+    $sel.textContent = iso;
+    const items = (dataCache.days || {})[iso] || [];
+    if (!items.length) {
+      $list.innerHTML = '<p class="text-xs text-gray-500 italic">Sin citas agendadas para este día.</p>';
+    } else {
+      $list.innerHTML = items.map(it => {
+        const color = it.estado === 'Completada' ? 'border-green-600 text-green-300'
+                    : it.estado === 'Cancelada'  ? 'border-red-600 text-red-300'
+                    : 'border-olive-600 text-olive-300';
+        return `<div class="flex items-center gap-2 p-2 bg-dark-900 rounded border-l-2 ${color}">
+                  <span class="text-xs font-bold text-white w-12">${it.hora}</span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs text-white truncate">${it.paciente}</p>
+                    <p class="text-[10px] text-gray-500 truncate">Dr. ${it.vet} · ${it.duracion} min</p>
+                  </div>
+                </div>`;
+      }).join('');
+    }
+    render();
+  }
+
+  async function fetchMonth() {
+    try {
+      const r = await fetch(`{% url 'citas_por_mes' %}?year=${curYear}&month=${curMonth}`);
+      dataCache = await r.json();
+    } catch (e) {
+      dataCache = { days: {} };
+    }
+    render();
+  }
+
+  $prev.addEventListener('click', () => {
+    curMonth--; if (curMonth < 1) { curMonth = 12; curYear--; }
+    selectedDateIso = null; $sel.textContent = '';
+    $list.innerHTML = '<p class="text-xs text-gray-500 italic">Selecciona un día para ver las citas agendadas.</p>';
+    fetchMonth();
+  });
+  $next.addEventListener('click', () => {
+    curMonth++; if (curMonth > 12) { curMonth = 1; curYear++; }
+    selectedDateIso = null; $sel.textContent = '';
+    $list.innerHTML = '<p class="text-xs text-gray-500 italic">Selecciona un día para ver las citas agendadas.</p>';
+    fetchMonth();
+  });
+
+  fetchMonth();
+})();
+</script>
+
+{% endblock %}

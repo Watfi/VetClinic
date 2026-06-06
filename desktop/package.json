@@ -1,0 +1,43 @@
+{
+  "name": "vetclinic-desktop",
+  "productName": "VetClinic Desktop",
+  "version": "1.0.0",
+  "description": "Local-first veterinary clinic management (admin only).",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env VETCLINIC_DEV=1 electron .",
+    "start": "electron .",
+    "build:backend": "cd .. && pyinstaller --noconfirm --onedir --name vetclinic-backend --add-data \"home/templates;home/templates\" --add-data \"home/static;home/static\" --add-data \"home/migrations;home/migrations\" --hidden-import home.apps --hidden-import whitenoise.middleware --hidden-import psycopg --collect-all psycopg --collect-all psycopg_binary --collect-all openpyxl --collect-all reportlab backend_entry.py",
+    "build:static": "cd .. && python manage.py collectstatic --noinput",
+    "build:seed": "cd .. && python manage.py migrate && python manage.py seed_admin",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "cross-env": "^7.0.3"
+  },
+  "build": {
+    "appId": "com.vetclinic.desktop",
+    "productName": "VetClinic Desktop",
+    "directories": {
+      "output": "../dist-electron",
+      "buildResources": "build"
+    },
+    "files": ["main.js", "preload.js", "package.json"],
+    "extraResources": [
+      { "from": "../dist/vetclinic-backend", "to": "backend" },
+      { "from": "../staticfiles", "to": "staticfiles" },
+      { "from": "../db.sqlite3", "to": "seed/db.sqlite3" }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

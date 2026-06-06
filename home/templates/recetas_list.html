@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <h1 class="text-3xl font-bold text-white flex items-center"><i class="fas fa-prescription text-olive-500 mr-3"></i> Recetario</h1>
+    <a href="{% url 'add_receta' %}" class="inline-flex items-center space-x-2 bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-600 hover:to-olive-500 text-white font-semibold px-6 py-3 rounded-lg shadow-lg">
+      <i class="fas fa-plus-circle"></i><span>Nueva receta</span>
+    </a>
+  </div>
+
+  {% if messages %}{% for m in messages %}
+    <div class="p-4 rounded-lg {% if m.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %}">{{ m }}</div>
+  {% endfor %}{% endif %}
+
+  <div class="bg-dark-800 border border-dark-700 rounded-xl overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-dark-900 text-olive-400">
+        <tr><th class="px-4 py-3 text-left">Número</th><th class="px-4 py-3 text-left">Fecha</th><th class="px-4 py-3 text-left">Paciente</th><th class="px-4 py-3 text-left">Veterinario</th><th class="px-4 py-3 text-right">Acciones</th></tr>
+      </thead>
+      <tbody>
+        {% for r in recetas %}
+        <tr class="border-t border-dark-700 hover:bg-dark-700/50">
+          <td class="px-4 py-3 font-mono text-white">{{ r.numero }}</td>
+          <td class="px-4 py-3 text-gray-300">{{ r.fecha|date:"Y-m-d H:i" }}</td>
+          <td class="px-4 py-3 text-gray-300">{{ r.paciente.nombre }} ({{ r.paciente.especie }})</td>
+          <td class="px-4 py-3 text-gray-300">{{ r.veterinario.nombre|default:r.veterinario.user|default:"—" }}</td>
+          <td class="px-4 py-3 text-right space-x-2">
+            <a href="{% url 'view_receta' r.id %}" class="text-olive-400 hover:text-olive-300"><i class="fas fa-eye"></i></a>
+            <a href="{% url 'receta_pdf' r.id %}" target="_blank" class="text-blue-400 hover:text-blue-300"><i class="fas fa-file-pdf"></i></a>
+            <a href="{% url 'delete_receta' r.id %}" onclick="return confirm('¿Eliminar?')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">No hay recetas.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

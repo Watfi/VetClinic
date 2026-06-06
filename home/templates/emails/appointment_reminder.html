@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Recordatorio de Cita — Kane Agropet</title>
+</head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:24px 0;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+             style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(15,23,42,0.08);">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#4d7c0f 0%,#65a30d 100%);padding:28px 32px;color:#ffffff;">
+            <table width="100%"><tr>
+              <td>
+                <p style="margin:0;font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:.85;">Recordatorio de Cita</p>
+                <h1 style="margin:6px 0 0;font-size:26px;font-weight:700;">Kane Agropet</h1>
+              </td>
+            </tr></table>
+          </td>
+        </tr>
+
+        <!-- Greeting -->
+        <tr>
+          <td style="padding:28px 32px 8px;">
+            <p style="margin:0 0 12px;font-size:16px;">Hola <strong>{{ propietario_nombre }}</strong>,</p>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#475569;">Te recordamos que tienes una cita agendada para <strong>{{ mascota_nombre }}</strong>. Asegúrate de llegar 10 minutos antes de la hora programada.</p>
+          </td>
+        </tr>
+
+        <!-- Appointment Details Card -->
+        <tr>
+          <td style="padding:20px 32px 8px;">
+            <table width="100%" style="background:#f7fee7;border:1px solid #d9f99d;border-radius:10px;padding:18px;">
+              <tr>
+                <td style="color:#4d7c0f;">
+                  <p style="margin:0 0 12px;font-size:11px;letter-spacing:2px;color:#4d7c0f;text-transform:uppercase;font-weight:600;">📅 Detalles de la Cita</p>
+                  <table width="100%" style="border-collapse:collapse;">
+                    <tr>
+                      <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                        <p style="margin:0;font-size:13px;color:#64748b;font-weight:500;">Fecha</p>
+                        <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#1e293b;">{{ cita_fecha }}</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                        <p style="margin:0;font-size:13px;color:#64748b;font-weight:500;">Hora</p>
+                        <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#1e293b;">{{ cita_hora }}</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                        <p style="margin:0;font-size:13px;color:#64748b;font-weight:500;">Mascota</p>
+                        <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#1e293b;">{{ mascota_nombre }} ({{ mascota_especie }})</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                        <p style="margin:0;font-size:13px;color:#64748b;font-weight:500;">Veterinario</p>
+                        <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#1e293b;">{{ veterinario_nombre }}</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:8px 0;">
+                        <p style="margin:0;font-size:13px;color:#64748b;font-weight:500;">Tipo de Cita</p>
+                        <p style="margin:4px 0 0;font-size:14px;font-weight:600;color:#1e293b;">{{ tipo_cita }}</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Price Card -->
+        <tr>
+          <td style="padding:20px 32px 8px;">
+            <table width="100%" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:18px;">
+              <tr>
+                <td>
+                  <p style="margin:0 0 8px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#1e40af;font-weight:600;">💰 Valor de la Consulta</p>
+                  <p style="margin:6px 0 0;font-size:28px;font-weight:700;color:#1e293b;">${{ tarifa }}</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- PDF Attachment Notice -->
+        <tr>
+          <td style="padding:8px 32px 24px;">
+            <table width="100%" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 14px;">
+              <tr>
+                <td style="font-size:13px;color:#166534;">
+                  📎 Encontrarás un recibo detallado en PDF adjunto a este correo.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#0f172a;padding:20px 32px;color:#cbd5e1;font-size:12px;line-height:1.6;">
+            <strong style="color:#ffffff;">Kane Agropet</strong><br>
+            Dosquebradas, Risaralda · +57 300 975 3389<br>
+            <span style="color:#64748b;">Si necesitas cambiar la hora de tu cita, contáctanos lo antes posible.</span>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center space-x-3">
+        <a href="{{ back_url|default:'/historias/' }}" class="text-gray-400 hover:text-white transition-colors">
+          <i class="fas fa-arrow-left text-xl"></i>
+        </a>
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-white flex items-center">
+            <i class="fas fa-file-medical-alt text-olive-500 mr-3"></i>
+            Historia clínica
+            {% if historia.hc_numero %}
+              <span class="ml-3 text-gray-400 font-mono text-xl">HC-{{ historia.hc_numero }}</span>
+            {% endif %}
+          </h1>
+          <p class="text-gray-400 mt-1 text-sm">
+            <i class="fas fa-calendar text-olive-500 mr-1"></i>
+            {{ historia.fecha_formatted|default:historia.fecha }}
+            {% if historia.hora %} · {{ historia.hora }}{% endif %}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        {% if puede_editar %}
+          <a href="{% url 'edit_historia' historia.id_str %}"
+             class="inline-flex items-center space-x-2 bg-olive-700 hover:bg-olive-600 text-white font-semibold px-4 py-2 rounded-lg transition-all">
+            <i class="fas fa-edit"></i><span class="hidden sm:inline">Editar</span>
+          </a>
+        {% endif %}
+        {% if puede_eliminar %}
+          <button onclick="confirmDelete()"
+                  class="inline-flex items-center space-x-2 bg-red-900/50 hover:bg-red-900 text-red-300 hover:text-white font-semibold px-4 py-2 rounded-lg border border-red-700 transition-all">
+            <i class="fas fa-trash"></i><span class="hidden sm:inline">Eliminar</span>
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="mb-6 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-900/30 border border-green-700 text-green-300{% else %}bg-red-900/30 border border-red-700 text-red-300{% endif %}">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mr-2"></i>{{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Patient Card (read-only, from Mascotas) -->
+  <div class="bg-gradient-to-r from-olive-900/30 to-olive-800/30 border border-olive-700/50 rounded-xl p-6 mb-6">
+    <h2 class="text-lg font-bold text-white mb-4 flex items-center">
+      <i class="fas fa-paw text-olive-500 mr-2"></i>Paciente y propietario
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+      <div>
+        <p class="text-gray-400">Mascota</p>
+        <p class="text-white font-semibold">{{ historia.paciente_card.nombre|default:historia.mascota_nombre }}</p>
+        <p class="text-gray-300">{{ historia.paciente_card.especie|default:historia.mascota_especie }} · {{ historia.paciente_card.raza|default:historia.mascota_raza }}</p>
+      </div>
+      <div>
+        <p class="text-gray-400">Dueño</p>
+        <p class="text-white font-semibold">{{ historia.paciente_card.owner_nombre|default:"—" }}</p>
+        {% if historia.paciente_card.owner_documento %}<p class="text-gray-300"><i class="fas fa-id-card mr-1"></i>{{ historia.paciente_card.owner_tipo_documento }} {{ historia.paciente_card.owner_documento }}</p>{% endif %}
+        {% if historia.paciente_card.owner_email %}<p class="text-gray-300"><i class="fas fa-envelope mr-1"></i>{{ historia.paciente_card.owner_email }}</p>{% endif %}
+        {% if historia.paciente_card.owner_telefono %}<p class="text-gray-300"><i class="fas fa-phone mr-1"></i>{{ historia.paciente_card.owner_telefono }}</p>{% endif %}
+        {% if historia.paciente_card.owner_direccion %}<p class="text-gray-300"><i class="fas fa-map-marker-alt mr-1"></i>{{ historia.paciente_card.owner_direccion }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Anamnesis -->
+  <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl mb-6">
+    <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-dark-700">
+      <div class="w-10 h-10 bg-green-700 rounded-lg flex items-center justify-center">
+        <i class="fas fa-notes-medical text-white"></i>
+      </div>
+      <h2 class="text-xl font-bold text-white">Anamnesis</h2>
+    </div>
+    <div class="space-y-4">
+      {% if historia.anamnesis_dieta %}<div><p class="text-gray-400 text-sm font-semibold mb-1">Dieta</p><div class="bg-dark-900 border border-dark-600 rounded-lg p-4 text-white whitespace-pre-wrap">{{ historia.anamnesis_dieta }}</div></div>{% endif %}
+      {% if historia.anamnesis_enfermedades_previas %}<div><p class="text-gray-400 text-sm font-semibold mb-1">Enfermedades previas</p><div class="bg-dark-900 border border-dark-600 rounded-lg p-4 text-white whitespace-pre-wrap">{{ historia.anamnesis_enfermedades_previas }}</div></div>{% endif %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {% if historia.anamnesis_esterilizado %}<div><p class="text-gray-400 text-sm">Esterilizado</p><p class="text-white font-medium">{{ historia.anamnesis_esterilizado }}</p></div>{% endif %}
+        {% if historia.anamnesis_num_partos %}<div><p class="text-gray-400 text-sm">Número de partos</p><p class="text-white font-medium">{{ historia.anamnesis_num_partos }}</p></div>{% endif %}
+      </div>
+      {% if historia.anamnesis_cirugias_previas %}<div><p class="text-gray-400 text-sm font-semibold mb-1">Cirugías previas</p><div class="bg-dark-900 border border-dark-600 rounded-lg p-4 text-white whitespace-pre-wrap">{{ historia.anamnesis_cirugias_previas }}</div></div>{% endif %}
+    </div>
+  </div>
+
+  <!-- Hallazgos clínicos -->
+  <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl mb-6">
+    <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-dark-700">
+      <div class="w-10 h-10 bg-purple-700 rounded-lg flex items-center justify-center">
+        <i class="fas fa-stethoscope text-white"></i>
+      </div>
+      <h2 class="text-xl font-bold text-white">Hallazgos clínicos</h2>
+    </div>
+    <div class="space-y-4">
+      {% if historia.examen_fisico %}<div><p class="text-gray-400 text-sm font-semibold mb-1">Examen físico</p><div class="bg-dark-900 border border-dark-600 rounded-lg p-4 text-white whitespace-pre-wrap">{{ historia.examen_fisico }}</div></div>{% endif %}
+      {% if historia.diagnostico %}<div><p class="text-gray-400 text-sm font-semibold mb-1">Diagnóstico</p><div class="bg-dark-900 border border-dark-600 rounded-lg p-4 text-white whitespace-pre-wrap">{{ historia.diagnostico }}</div></div>{% endif %}
+      {% if historia.tratamiento %}<div><p class="text-gray-400 text-sm font-semibold mb-1">Tratamiento</p><div class="bg-dark-900 border border-dark-600 rounded-lg p-4 text-white whitespace-pre-wrap">{{ historia.tratamiento }}</div></div>{% endif %}
+      {% if historia.observaciones %}<div><p class="text-gray-400 text-sm font-semibold mb-1">Observaciones</p><div class="bg-dark-900 border border-dark-600 rounded-lg p-4 text-white whitespace-pre-wrap">{{ historia.observaciones }}</div></div>{% endif %}
+    </div>
+  </div>
+</div>
+
+<div id="deleteModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-dark-800 border border-dark-700 rounded-2xl max-w-md w-full shadow-2xl">
+    <div class="p-6">
+      <div class="w-16 h-16 mx-auto mb-4 bg-red-900/30 rounded-full flex items-center justify-center">
+        <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-2 text-center">¿Eliminar historia?</h3>
+      <p class="text-gray-400 mb-6 text-center">Esta acción no se puede deshacer.</p>
+      <div class="flex space-x-3">
+        <button onclick="closeDeleteModal()" class="flex-1 bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white py-3 rounded-lg font-medium border border-dark-600">Cancelar</button>
+        <a href="{% url 'delete_historia' historia.id_str %}" class="flex-1 bg-red-700 hover:bg-red-600 text-white py-3 rounded-lg text-center font-medium">Eliminar</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function confirmDelete() { document.getElementById('deleteModal').classList.remove('hidden'); }
+  function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDeleteModal(); });
+</script>
+
+{% endblock %}

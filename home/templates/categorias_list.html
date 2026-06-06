@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-6 max-w-6xl mx-auto">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <h1 class="text-3xl font-bold text-white flex items-center">
+      <i class="fas fa-tags text-olive-500 mr-3"></i> Categorías
+    </h1>
+    <a href="{% url 'add_categoria' %}"
+       class="inline-flex items-center space-x-2 bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-600 hover:to-olive-500 text-white font-semibold px-6 py-3 rounded-lg shadow-lg">
+      <i class="fas fa-plus-circle"></i><span>Nueva categoría</span>
+    </a>
+  </div>
+
+  {% if messages %}{% for m in messages %}
+    <div class="p-4 rounded-lg {% if m.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %}">{{ m }}</div>
+  {% endfor %}{% endif %}
+
+  <div class="bg-dark-800 border border-dark-700 rounded-xl overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-dark-900 text-olive-400">
+        <tr><th class="px-4 py-3 text-left">Nombre</th><th class="px-4 py-3 text-left">Descripción</th><th class="px-4 py-3 text-left">Productos</th><th class="px-4 py-3 text-right">Acciones</th></tr>
+      </thead>
+      <tbody>
+        {% for c in categorias %}
+        <tr class="border-t border-dark-700 hover:bg-dark-700/50">
+          <td class="px-4 py-3 text-white font-medium">{{ c.nombre }}</td>
+          <td class="px-4 py-3 text-gray-300">{{ c.descripcion|default:"—" }}</td>
+          <td class="px-4 py-3 text-gray-300">{{ c.productos.count }}</td>
+          <td class="px-4 py-3 text-right space-x-2">
+            <a href="{% url 'edit_categoria' c.id %}" class="text-olive-400 hover:text-olive-300"><i class="fas fa-edit"></i></a>
+            <a href="{% url 'delete_categoria' c.id %}" onclick="return confirm('¿Eliminar?')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="px-4 py-8 text-center text-gray-400">No hay categorías. <a href="{% url 'add_categoria' %}" class="text-olive-400 underline">Crea la primera</a>.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

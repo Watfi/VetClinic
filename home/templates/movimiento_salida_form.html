@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-3xl font-bold text-white flex items-center">
+      <i class="fas fa-arrow-up text-yellow-400 mr-3"></i> Registrar salida
+    </h1>
+    <a href="{% url 'list_movimientos' producto.id %}" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left mr-1"></i>Volver</a>
+  </div>
+  <p class="text-gray-400">Producto: <span class="text-white font-semibold">{{ producto.nombre }}</span> — Stock actual: <span class="text-olive-400 font-bold">{{ producto.stock }}</span></p>
+
+  {% if messages %}{% for m in messages %}
+    <div class="p-4 rounded-lg {% if m.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %}">{{ m }}</div>
+  {% endfor %}{% endif %}
+
+  <form method="POST" class="bg-dark-800 border border-dark-700 rounded-2xl p-6 space-y-4">
+    {% csrf_token %}
+    <div>
+      <label class="block text-gray-300 mb-1 text-sm font-medium">Cantidad *</label>
+      <input type="number" name="cantidad" min="1" max="{{ producto.stock }}" required class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+      <p class="text-gray-500 text-xs mt-1">Maximo disponible: {{ producto.stock }}</p>
+    </div>
+    <div>
+      <label class="block text-gray-300 mb-1 text-sm font-medium">Motivo de la salida *</label>
+      <input type="text" name="motivo" required placeholder="Ej: Venta directa, consumo interno, donacion..." class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+    </div>
+    <div>
+      <label class="block text-gray-300 mb-1 text-sm font-medium">Notas</label>
+      <textarea name="notas" rows="2" placeholder="Observaciones..." class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600 resize-none"></textarea>
+    </div>
+    <button type="submit" class="w-full bg-yellow-700 hover:bg-yellow-600 text-white font-semibold py-3 rounded-lg transition-colors">
+      <i class="fas fa-check mr-2"></i>Registrar salida
+    </button>
+  </form>
+</div>
+{% endblock %}

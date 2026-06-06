@@ -1,0 +1,432 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="max-w-7xl mx-auto space-y-6 px-2 sm:px-4">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div>
+      <p class="text-xs uppercase tracking-[0.25em] text-olive-400 font-bold mb-1">Centro de inteligencia</p>
+      <h1 class="text-3xl sm:text-4xl font-bold text-white flex items-center gap-3">
+        <i class="fas fa-chart-line text-olive-500"></i> Reportes
+      </h1>
+      <p class="text-gray-400 text-sm mt-1">Indicadores administrativos en tiempo real.</p>
+    </div>
+
+    <!-- Date filter -->
+    <form method="GET" class="flex flex-wrap items-end gap-2 bg-dark-800 border border-dark-700 rounded-xl p-3 shadow-xl">
+      <input type="hidden" name="tab" value="{{ tab }}">
+      <div>
+        <label class="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Desde</label>
+        <input type="date" name="desde" value="{{ start_date }}"
+               class="bg-dark-900 border border-dark-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-olive-600">
+      </div>
+      <div>
+        <label class="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Hasta</label>
+        <input type="date" name="hasta" value="{{ end_date }}"
+               class="bg-dark-900 border border-dark-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-olive-600">
+      </div>
+      <button class="bg-olive-600 hover:bg-olive-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+        <i class="fas fa-filter mr-1"></i>Filtrar
+      </button>
+    </form>
+  </div>
+
+  <!-- Tabs -->
+  <div class="bg-dark-800 border border-dark-700 rounded-xl overflow-x-auto">
+    <nav class="flex min-w-max">
+      <a href="?tab=inventory{% if start_date %}&desde={{ start_date }}{% endif %}{% if end_date %}&hasta={{ end_date }}{% endif %}"
+         class="px-5 py-3 text-sm font-semibold uppercase tracking-wider border-b-2 transition-colors
+                {% if tab == 'inventory' %}border-olive-500 text-olive-400 bg-dark-900{% else %}border-transparent text-gray-400 hover:text-white hover:bg-dark-900{% endif %}">
+        <i class="fas fa-boxes mr-1"></i>Inventario
+      </a>
+      <a href="?tab=sales_products{% if start_date %}&desde={{ start_date }}{% endif %}{% if end_date %}&hasta={{ end_date }}{% endif %}"
+         class="px-5 py-3 text-sm font-semibold uppercase tracking-wider border-b-2 transition-colors
+                {% if tab == 'sales_products' %}border-olive-500 text-olive-400 bg-dark-900{% else %}border-transparent text-gray-400 hover:text-white hover:bg-dark-900{% endif %}">
+        <i class="fas fa-cart-shopping mr-1"></i>Ventas de productos
+      </a>
+      <a href="?tab=citas_income{% if start_date %}&desde={{ start_date }}{% endif %}{% if end_date %}&hasta={{ end_date }}{% endif %}"
+         class="px-5 py-3 text-sm font-semibold uppercase tracking-wider border-b-2 transition-colors
+                {% if tab == 'citas_income' %}border-olive-500 text-olive-400 bg-dark-900{% else %}border-transparent text-gray-400 hover:text-white hover:bg-dark-900{% endif %}">
+        <i class="fas fa-stethoscope mr-1"></i>Ingresos por citas
+      </a>
+      <a href="?tab=earnings{% if start_date %}&desde={{ start_date }}{% endif %}{% if end_date %}&hasta={{ end_date }}{% endif %}"
+         class="px-5 py-3 text-sm font-semibold uppercase tracking-wider border-b-2 transition-colors
+                {% if tab == 'earnings' %}border-olive-500 text-olive-400 bg-dark-900{% else %}border-transparent text-gray-400 hover:text-white hover:bg-dark-900{% endif %}">
+        <i class="fas fa-sack-dollar mr-1"></i>Ganancias totales
+      </a>
+      <a href="?tab=owners{% if start_date %}&desde={{ start_date }}{% endif %}{% if end_date %}&hasta={{ end_date }}{% endif %}"
+         class="px-5 py-3 text-sm font-semibold uppercase tracking-wider border-b-2 transition-colors
+                {% if tab == 'owners' %}border-olive-500 text-olive-400 bg-dark-900{% else %}border-transparent text-gray-400 hover:text-white hover:bg-dark-900{% endif %}">
+        <i class="fas fa-users mr-1"></i>Propietarios
+      </a>
+    </nav>
+  </div>
+
+  {# ══════════ TAB: INVENTORY ══════════ #}
+  {% if tab == 'inventory' %}
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-gradient-to-br from-olive-900/40 to-olive-800/20 border border-olive-700/50 rounded-xl p-5">
+        <p class="text-xs uppercase tracking-wider text-olive-400 mb-2">Valor inventario (venta)</p>
+        <p class="text-3xl font-bold text-white">${{ inv_total_value|floatformat:0 }}</p>
+      </div>
+      <div class="bg-gradient-to-br from-blue-900/40 to-blue-800/20 border border-blue-700/50 rounded-xl p-5">
+        <p class="text-xs uppercase tracking-wider text-blue-300 mb-2">Costo de adquisición</p>
+        <p class="text-3xl font-bold text-white">${{ inv_total_cost|floatformat:0 }}</p>
+      </div>
+      <div class="bg-gradient-to-br from-red-900/40 to-red-800/20 border border-red-700/50 rounded-xl p-5">
+        <p class="text-xs uppercase tracking-wider text-red-300 mb-2">Productos en bajo stock</p>
+        <p class="text-3xl font-bold text-white">{{ inv_low_stock }}</p>
+      </div>
+    </div>
+
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fas fa-boxes text-olive-500"></i>Detalle de inventario
+        </h2>
+        <a href="?type=inventory&format=excel{% if start_date %}&desde={{ start_date }}{% endif %}{% if end_date %}&hasta={{ end_date }}{% endif %}"
+           class="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
+          <i class="fas fa-file-excel"></i>Exportar Excel
+        </a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-dark-900 text-gray-300 uppercase text-xs tracking-wider">
+            <tr>
+              <th class="px-3 py-2 text-left">SKU</th>
+              <th class="px-3 py-2 text-left">Producto</th>
+              <th class="px-3 py-2 text-left">Categoría</th>
+              <th class="px-3 py-2 text-right">Stock</th>
+              <th class="px-3 py-2 text-right">P. compra</th>
+              <th class="px-3 py-2 text-right">P. venta</th>
+              <th class="px-3 py-2 text-right">Margen u.</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-dark-700">
+            {% for p in productos_data %}
+              <tr class="hover:bg-dark-900">
+                <td class="px-3 py-2 text-gray-400">{{ p.sku }}</td>
+                <td class="px-3 py-2 text-white">{{ p.nombre }}</td>
+                <td class="px-3 py-2 text-gray-300">{{ p.categoria }}</td>
+                <td class="px-3 py-2 text-right text-white">{{ p.stock }}</td>
+                <td class="px-3 py-2 text-right text-gray-300">${{ p.precio_compra|floatformat:2 }}</td>
+                <td class="px-3 py-2 text-right text-olive-400 font-semibold">${{ p.precio|floatformat:2 }}</td>
+                <td class="px-3 py-2 text-right {% if p.margen >= 0 %}text-green-400{% else %}text-red-400{% endif %}">${{ p.margen|floatformat:2 }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="7" class="text-center text-gray-500 py-8">Sin productos.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+  {# ══════════ TAB: SALES_PRODUCTS ══════════ #}
+  {% if tab == 'sales_products' %}
+    <div class="flex justify-end">
+      <a href="?tab=sales_products&format=pdf{% if start_date %}&desde={{ start_date }}{% endif %}{% if end_date %}&hasta={{ end_date }}{% endif %}"
+         class="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
+        <i class="fas fa-file-pdf"></i>Exportar PDF
+      </a>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <i class="fas fa-trophy text-yellow-400"></i>Top 10 productos vendidos
+        </h2>
+        <div style="height:320px;"><canvas id="chartTopProductos"></canvas></div>
+      </div>
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl overflow-x-auto">
+        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <i class="fas fa-table text-olive-500"></i>Detalle por producto
+        </h2>
+        <table class="min-w-full text-sm">
+          <thead class="bg-dark-900 text-gray-300 uppercase text-xs tracking-wider">
+            <tr>
+              <th class="px-3 py-2 text-left">Producto</th>
+              <th class="px-3 py-2 text-right">Qty</th>
+              <th class="px-3 py-2 text-right">Ingresos</th>
+              <th class="px-3 py-2 text-right">Costo</th>
+              <th class="px-3 py-2 text-right">Margen</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-dark-700">
+            {% for p in top_productos %}
+              <tr class="hover:bg-dark-900">
+                <td class="px-3 py-2 text-white">{{ p.nombre }}</td>
+                <td class="px-3 py-2 text-right text-gray-300">{{ p.qty }}</td>
+                <td class="px-3 py-2 text-right text-olive-400 font-semibold">${{ p.ingresos|floatformat:2 }}</td>
+                <td class="px-3 py-2 text-right text-gray-300">${{ p.costo|floatformat:2 }}</td>
+                <td class="px-3 py-2 text-right {% if p.margen >= 0 %}text-green-400{% else %}text-red-400{% endif %}">${{ p.margen|floatformat:2 }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="text-center text-gray-500 py-8">Sin ventas en el rango.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {{ top_productos_json|json_script:"top-productos-data" }}
+  {% endif %}
+
+  {# ══════════ TAB: CITAS_INCOME ══════════ #}
+  {% if tab == 'citas_income' %}
+    <div class="flex justify-end">
+      <a href="?tab=citas_income&format=pdf{% if start_date %}&desde={{ start_date }}{% endif %}{% if end_date %}&hasta={{ end_date }}{% endif %}"
+         class="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
+        <i class="fas fa-file-pdf"></i>Exportar PDF
+      </a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="bg-gradient-to-br from-blue-900/40 to-blue-800/20 border border-blue-700/50 rounded-xl p-5">
+        <p class="text-xs uppercase tracking-wider text-blue-300 mb-2">Ingresos por citas</p>
+        <p class="text-3xl font-bold text-white">${{ total_ingresos_citas|floatformat:0 }}</p>
+      </div>
+      <div class="bg-gradient-to-br from-olive-900/40 to-olive-800/20 border border-olive-700/50 rounded-xl p-5">
+        <p class="text-xs uppercase tracking-wider text-olive-400 mb-2">Tipos de cita</p>
+        <p class="text-3xl font-bold text-white">{{ citas_tipo_table|length }}</p>
+      </div>
+    </div>
+
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+      <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <i class="fas fa-chart-line text-olive-500"></i>Ingresos por mes
+      </h2>
+      <div style="height:260px;"><canvas id="chartCitasMes"></canvas></div>
+    </div>
+
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl overflow-x-auto">
+      <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <i class="fas fa-list text-olive-500"></i>Por tipo de cita (tarifa aplicada)
+      </h2>
+      <table class="min-w-full text-sm">
+        <thead class="bg-dark-900 text-gray-300 uppercase text-xs tracking-wider">
+          <tr>
+            <th class="px-3 py-2 text-left">Tipo</th>
+            <th class="px-3 py-2 text-right">Precio tarifa</th>
+            <th class="px-3 py-2 text-right">Cantidad</th>
+            <th class="px-3 py-2 text-right">Ingresos</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-dark-700">
+          {% for r in citas_tipo_table %}
+            <tr class="hover:bg-dark-900">
+              <td class="px-3 py-2 text-white">{{ r.tipo }}</td>
+              <td class="px-3 py-2 text-right text-gray-300">${{ r.precio_tarifa|floatformat:2 }}</td>
+              <td class="px-3 py-2 text-right text-gray-300">{{ r.count }}</td>
+              <td class="px-3 py-2 text-right text-olive-400 font-semibold">${{ r.ingresos|floatformat:2 }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="text-center text-gray-500 py-8">Sin citas en el rango.</td></tr>
+          {% endfor %}
+        </tbody>
+        {% if citas_tipo_table %}
+        <tfoot class="bg-dark-900">
+          <tr>
+            <td colspan="2" class="px-3 py-2 text-right text-olive-400 font-bold">Total</td>
+            <td class="px-3 py-2 text-right text-white font-bold">{{ total_citas_count }}</td>
+            <td class="px-3 py-2 text-right text-white font-bold">${{ total_ingresos_citas|floatformat:2 }}</td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+    {{ citas_chart_json|json_script:"citas-chart-data" }}
+  {% endif %}
+
+  {# ══════════ TAB: EARNINGS ══════════ #}
+  {% if tab == 'earnings' %}
+    <div class="flex justify-end">
+      <a href="?tab=earnings&format=pdf{% if start_date %}&desde={{ start_date }}{% endif %}{% if end_date %}&hasta={{ end_date }}{% endif %}"
+         class="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
+        <i class="fas fa-file-pdf"></i>Exportar PDF
+      </a>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="bg-gradient-to-br from-olive-900/40 to-olive-800/20 border border-olive-700/50 rounded-xl p-4">
+        <p class="text-[10px] uppercase tracking-wider text-olive-400">Ingresos ventas</p>
+        <p class="text-2xl font-bold text-white">${{ ingresos_ventas|floatformat:0 }}</p>
+      </div>
+      <div class="bg-gradient-to-br from-blue-900/40 to-blue-800/20 border border-blue-700/50 rounded-xl p-4">
+        <p class="text-[10px] uppercase tracking-wider text-blue-300">Ingresos citas</p>
+        <p class="text-2xl font-bold text-white">${{ ingresos_citas|floatformat:0 }}</p>
+      </div>
+      <div class="bg-gradient-to-br from-red-900/40 to-red-800/20 border border-red-700/50 rounded-xl p-4">
+        <p class="text-[10px] uppercase tracking-wider text-red-300">Costo productos</p>
+        <p class="text-2xl font-bold text-white">${{ costo_productos|floatformat:0 }}</p>
+      </div>
+      <div class="bg-gradient-to-br from-yellow-900/40 to-yellow-800/20 border border-yellow-700/50 rounded-xl p-4">
+        <p class="text-[10px] uppercase tracking-wider text-yellow-300">Utilidad bruta</p>
+        <p class="text-2xl font-bold text-white">${{ utilidad_bruta|floatformat:0 }}</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <i class="fas fa-chart-pie text-olive-500"></i>Composición de ingresos
+        </h2>
+        <div style="height:300px;"><canvas id="chartEarnings"></canvas></div>
+      </div>
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+        <h2 class="text-lg font-bold text-white mb-4">Resumen</h2>
+        <ul class="space-y-3 text-sm">
+          <li class="flex justify-between border-b border-dark-700 pb-2">
+            <span class="text-gray-400">Ingresos brutos totales</span>
+            <span class="text-white font-semibold">${{ ingresos_ventas|add:ingresos_citas|floatformat:2 }}</span>
+          </li>
+          <li class="flex justify-between border-b border-dark-700 pb-2">
+            <span class="text-gray-400">Costos de productos vendidos</span>
+            <span class="text-red-400 font-semibold">- ${{ costo_productos|floatformat:2 }}</span>
+          </li>
+          <li class="flex justify-between text-lg pt-2">
+            <span class="text-olive-400 font-bold">Utilidad bruta</span>
+            <span class="text-white font-bold">${{ utilidad_bruta|floatformat:2 }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    {{ earnings_chart_json|json_script:"earnings-chart-data" }}
+  {% endif %}
+
+  {# ══════════ TAB: OWNERS ══════════ #}
+  {% if tab == 'owners' %}
+    <div class="flex justify-end">
+      <a href="?tab=owners&format=pdf{% if start_date %}&desde={{ start_date }}{% endif %}{% if end_date %}&hasta={{ end_date }}{% endif %}"
+         class="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
+        <i class="fas fa-file-pdf"></i>Exportar PDF
+      </a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-700/50 rounded-xl p-5 sm:col-span-3">
+        <p class="text-xs uppercase tracking-wider text-purple-300 mb-2">Propietarios registrados</p>
+        <p class="text-4xl font-bold text-white">{{ total_propietarios }}</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <i class="fas fa-chart-line text-olive-500"></i>Altas por mes
+        </h2>
+        <div style="height:260px;"><canvas id="chartProp"></canvas></div>
+      </div>
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl overflow-x-auto">
+        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <i class="fas fa-crown text-yellow-400"></i>Top 10 por gasto
+        </h2>
+        <table class="min-w-full text-sm">
+          <thead class="bg-dark-900 text-gray-300 uppercase text-xs tracking-wider">
+            <tr>
+              <th class="px-3 py-2 text-left">Cliente</th>
+              <th class="px-3 py-2 text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-dark-700">
+            {% for o in top_owners %}
+              <tr class="hover:bg-dark-900">
+                <td class="px-3 py-2 text-white">{{ o.nombre }}</td>
+                <td class="px-3 py-2 text-right text-olive-400 font-semibold">${{ o.total|floatformat:2 }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="2" class="text-center text-gray-500 py-8">Sin datos.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {{ prop_chart_json|json_script:"prop-chart-data" }}
+  {% endif %}
+</div>
+
+<script>
+(function () {
+  if (typeof Chart === 'undefined') return;
+  const isLight = document.documentElement.classList.contains('light');
+  const txt = isLight ? '#1e293b' : '#cbd5e1';
+  const grid = isLight ? 'rgba(15,23,42,0.08)' : 'rgba(203,213,225,0.08)';
+  Chart.defaults.color = txt;
+  Chart.defaults.borderColor = grid;
+  Chart.defaults.font.family = "'Poppins',system-ui,sans-serif";
+
+  function readJson(id) {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    try {
+      let v = JSON.parse(el.textContent);
+      if (typeof v === 'string') v = JSON.parse(v);
+      return v;
+    } catch (e) { return null; }
+  }
+
+  const tp = readJson('top-productos-data');
+  if (tp && document.getElementById('chartTopProductos')) {
+    new Chart(document.getElementById('chartTopProductos'), {
+      type: 'bar',
+      data: {
+        labels: tp.labels,
+        datasets: [
+          { label: 'Ingresos', data: tp.ingresos, backgroundColor: '#65a30d', borderRadius: 6 },
+          { label: 'Costo',    data: tp.costo,    backgroundColor: '#ef4444', borderRadius: 6 },
+        ],
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        scales: { x: { grid: { color: grid }}, y: { grid: { display: false }}}}
+    });
+  }
+
+  const cm = readJson('citas-chart-data');
+  if (cm && document.getElementById('chartCitasMes')) {
+    new Chart(document.getElementById('chartCitasMes'), {
+      type: 'line',
+      data: {
+        labels: cm.labels,
+        datasets: [{
+          label: 'Ingresos por citas',
+          data: cm.values,
+          borderColor: '#65a30d',
+          backgroundColor: 'rgba(101,163,13,0.15)',
+          fill: true, tension: 0.35, borderWidth: 2,
+          pointBackgroundColor: '#65a30d', pointRadius: 4,
+        }],
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        scales: { x: { grid: { color: grid }}, y: { grid: { color: grid }}}}
+    });
+  }
+
+  const er = readJson('earnings-chart-data');
+  if (er && document.getElementById('chartEarnings')) {
+    new Chart(document.getElementById('chartEarnings'), {
+      type: 'doughnut',
+      data: {
+        labels: er.labels,
+        datasets: [{ data: er.values, backgroundColor: ['#65a30d','#3b82f6','#ef4444'], borderWidth: 0 }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '62%',
+        plugins: { legend: { position: 'bottom' }}}
+    });
+  }
+
+  const pp = readJson('prop-chart-data');
+  if (pp && document.getElementById('chartProp')) {
+    new Chart(document.getElementById('chartProp'), {
+      type: 'line',
+      data: {
+        labels: pp.labels,
+        datasets: [{
+          label: 'Altas',
+          data: pp.values,
+          borderColor: '#a855f7',
+          backgroundColor: 'rgba(168,85,247,0.15)',
+          fill: true, tension: 0.35, borderWidth: 2,
+          pointBackgroundColor: '#a855f7', pointRadius: 4,
+        }],
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        scales: { x: { grid: { color: grid }}, y: { grid: { color: grid }, beginAtZero: true, ticks: { precision: 0 }}}}
+    });
+  }
+})();
+</script>
+{% endblock %}

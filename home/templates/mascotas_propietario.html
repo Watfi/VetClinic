@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="space-y-6 max-w-7xl mx-auto">
+
+  <!-- Breadcrumb -->
+  <div class="flex items-center space-x-2 text-sm text-gray-400">
+    <a href="{% url 'list_pacientes' %}" class="hover:text-olive-400 transition-colors">
+      <i class="fas fa-users mr-1"></i>Pacientes
+    </a>
+    <i class="fas fa-chevron-right text-xs"></i>
+    <span class="text-white">{{ propietario.nombre|default:"Propietario" }}</span>
+  </div>
+
+  <!-- Tarjeta propietario -->
+  <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-center space-x-4">
+        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-olive-700 to-olive-600
+                    flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
+          {{ propietario.nombre|slice:":1"|upper|default:"?" }}
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-white">{{ propietario.nombre|default:"Sin nombre" }}</h1>
+          <div class="flex flex-wrap gap-3 mt-1 text-sm text-gray-400">
+            {% if propietario.numero_documento %}
+              <span><i class="fas fa-id-card text-olive-500 mr-1"></i>{{ propietario.tipo_documento_display }} {{ propietario.numero_documento }}</span>
+            {% endif %}
+            {% if propietario.telefono %}
+              <span><i class="fas fa-phone text-olive-500 mr-1"></i>{{ propietario.telefono }}</span>
+            {% endif %}
+            {% if propietario.email %}
+              <span><i class="fas fa-envelope text-olive-500 mr-1"></i>{{ propietario.email }}</span>
+            {% endif %}
+            {% if propietario.ciudad %}
+              <span><i class="fas fa-map-marker-alt text-olive-500 mr-1"></i>{{ propietario.ciudad }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-3 flex-shrink-0">
+        <a href="{% url 'add_mascota' propietario_id=propietario.id %}"
+           class="inline-flex items-center bg-olive-700 hover:bg-olive-600 text-white font-semibold
+                  px-5 py-2.5 rounded-lg transition-colors shadow-lg">
+          <i class="fas fa-paw mr-2"></i>+ Registrar Mascota
+        </a>
+        <a href="{% url 'edit_propietario' id=propietario.id %}"
+           class="inline-flex items-center bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white
+                  px-4 py-2.5 rounded-lg border border-dark-600 transition-colors">
+          <i class="fas fa-edit mr-1"></i>Editar
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %}">
+        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>{{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Buscador mascotas -->
+  <div class="bg-dark-800 border border-dark-700 rounded-xl p-4 shadow-xl">
+    <div class="flex gap-3">
+      <div class="flex-1 relative">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+        <input type="text" id="searchMascota"
+               placeholder="Buscar por nombre o código/chip..."
+               class="w-full bg-dark-900 border border-dark-600 rounded-lg pl-11 pr-4 py-3 text-white
+                      focus:outline-none focus:ring-2 focus:ring-olive-600">
+      </div>
+    </div>
+    <p class="text-sm text-gray-400 mt-2"><span id="mascCount">{{ mascotas|length }}</span> mascotas</p>
+  </div>
+
+  {% if mascotas %}
+    <!-- Grid mascotas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="mascGrid">
+      {% for m in mascotas %}
+        <div class="masc-card bg-dark-800 border border-dark-700 rounded-xl overflow-hidden
+                    hover:border-olive-600 hover:shadow-xl hover:shadow-olive-500/20
+                    transform hover:-translate-y-1 transition-all duration-300 group"
+             data-nombre="{{ m.nombre|lower }}"
+             data-chip="{{ m.codigo_chip|lower }}">
+
+          <!-- Imagen -->
+          <div class="relative h-40 bg-gradient-to-br from-olive-800 to-olive-700 overflow-hidden">
+            {% if m.profile_picture %}
+              <img src="{{ m.profile_picture }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="{{ m.nombre }}">
+            {% else %}
+              <div class="w-full h-full flex items-center justify-center">
+                <i class="fas fa-paw text-white text-5xl opacity-40"></i>
+              </div>
+            {% endif %}
+            <div class="absolute inset-0 bg-gradient-to-t from-dark-900/80 to-transparent"></div>
+
+            <!-- Badges -->
+            {% if m.especie %}
+              <div class="absolute top-3 right-3">
+                <span class="bg-white/90 text-olive-800 px-2.5 py-1 rounded-full text-xs font-bold">{{ m.especie }}</span>
+              </div>
+            {% endif %}
+            {% if m.sexo and m.sexo != 'Desconocido' %}
+              <div class="absolute top-3 left-3">
+                <span class="{% if m.sexo == 'Macho' %}bg-blue-600{% else %}bg-pink-600{% endif %} text-white px-2 py-1 rounded-full text-xs font-bold">
+                  {% if m.sexo == 'Macho' %}♂{% else %}♀{% endif %} {{ m.sexo }}
+                </span>
+              </div>
+            {% endif %}
+
+            <!-- Nombre sobre imagen -->
+            <div class="absolute bottom-3 left-4 right-4">
+              <h3 class="text-xl font-bold text-white">{{ m.nombre|default:"Sin nombre" }}</h3>
+              {% if m.codigo_chip %}
+                <p class="text-olive-300 text-xs"><i class="fas fa-microchip mr-1"></i>{{ m.codigo_chip }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="p-4">
+            <div class="space-y-1.5 text-sm mb-4">
+              {% if m.raza %}<p class="text-gray-300"><i class="fas fa-tag text-olive-500 w-4"></i> {{ m.raza }}</p>{% endif %}
+              {% if m.color %}<p class="text-gray-300"><i class="fas fa-palette text-olive-500 w-4"></i> {{ m.color }}</p>{% endif %}
+              {% if m.estado_reproductivo %}<p class="text-gray-300"><i class="fas fa-venus-mars text-olive-500 w-4"></i> {{ m.estado_reproductivo }}</p>{% endif %}
+              {% if m.peso %}<p class="text-gray-300"><i class="fas fa-weight text-olive-500 w-4"></i> {{ m.peso }} {{ m.unidad_peso }}</p>{% endif %}
+              {% if m.fecha_nacimiento %}<p class="text-gray-300"><i class="fas fa-birthday-cake text-olive-500 w-4"></i> {{ m.fecha_nacimiento }}</p>{% endif %}
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex gap-2 pt-3 border-t border-dark-700">
+              <a href="{% url 'historia_paciente' paciente_id=m.id %}"
+                 class="flex-1 bg-blue-700 hover:bg-blue-600 text-white text-center py-2 rounded-lg
+                        text-xs font-medium transition-colors">
+                <i class="fas fa-file-medical mr-1"></i>Historia
+              </a>
+              <a href="{% url 'edit_mascota' id=m.id %}"
+                 class="flex-1 bg-olive-700 hover:bg-olive-600 text-white text-center py-2 rounded-lg
+                        text-xs font-medium transition-colors">
+                <i class="fas fa-edit mr-1"></i>Editar
+              </a>
+              <a href="{% url 'delete_mascota' id=m.id %}"
+                 onclick="return confirm('¿Eliminar la mascota {{ m.nombre }}?')"
+                 class="flex-1 bg-red-900/40 hover:bg-red-900 text-red-300 hover:text-white text-center py-2 rounded-lg
+                        text-xs font-medium border border-red-700 transition-colors">
+                <i class="fas fa-trash-alt mr-1"></i>Eliminar
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <!-- Sin mascotas -->
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-12 text-center">
+      <div class="w-24 h-24 mx-auto mb-5 bg-gradient-to-br from-olive-800 to-olive-700 rounded-full flex items-center justify-center shadow-2xl">
+        <i class="fas fa-paw text-white text-4xl"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-2">Sin mascotas registradas</h3>
+      <p class="text-gray-400 mb-5">Este propietario aún no tiene mascotas. ¡Registra la primera!</p>
+      <a href="{% url 'add_mascota' propietario_id=propietario.id %}"
+         class="inline-flex items-center bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-600 hover:to-olive-500
+                text-white font-semibold px-7 py-3 rounded-lg shadow-lg transform hover:scale-105 transition-all">
+        <i class="fas fa-paw mr-2"></i>Registrar Mascota
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+
+<script>
+  const mascCards = Array.from(document.querySelectorAll('.masc-card'));
+  document.getElementById('searchMascota').addEventListener('input', function () {
+    const q = this.value.toLowerCase().trim();
+    let v = 0;
+    mascCards.forEach(c => {
+      const ok = !q || c.dataset.nombre.includes(q) || c.dataset.chip.includes(q);
+      c.style.display = ok ? '' : 'none';
+      if (ok) v++;
+    });
+    document.getElementById('mascCount').textContent = v;
+  });
+</script>
+
+{% endblock %}

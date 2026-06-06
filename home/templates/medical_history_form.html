@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center space-x-3 mb-2">
+      <a href="{% url 'list_historias' %}"
+         class="text-gray-400 hover:text-white transition-colors">
+        <i class="fas fa-arrow-left text-xl"></i>
+      </a>
+      <h1 class="text-2xl sm:text-3xl font-bold text-white flex items-center">
+        <i class="fas fa-file-medical text-olive-500 mr-3"></i>
+        {% if action == 'Add' %}New Medical Record{% else %}Edit Medical Record{% endif %}
+      </h1>
+    </div>
+    <p class="text-gray-400 ml-12 text-sm sm:text-base">
+      Datos del animal y del propietario se toman del módulo Mascotas.
+    </p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="mb-6 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-900/30 border border-green-700 text-green-300{% else %}bg-red-900/30 border border-red-700 text-red-300{% endif %}">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mr-2"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST" class="space-y-6">
+    {% csrf_token %}
+
+    <!-- Sección 1: Información Básica -->
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+      <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-dark-700">
+        <div class="w-10 h-10 bg-olive-700 rounded-lg flex items-center justify-center">
+          <i class="fas fa-info-circle text-white"></i>
+        </div>
+        <h2 class="text-xl font-bold text-white">Información básica</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-300 mb-2 font-medium">
+            <i class="fas fa-paw text-olive-500 mr-2"></i>Paciente *
+          </label>
+          <select id="id_paciente" name="id_paciente" required
+                  class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+            <option value="">Seleccionar mascota…</option>
+            {% for mascota in mascotas %}
+              <option value="{{ mascota.id_str }}"
+                      {% if historia and historia.id_paciente|stringformat:"s" == mascota.id_str %}selected{% endif %}>
+                {{ mascota.display_name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-gray-300 mb-2 font-medium">
+            <i class="fas fa-hashtag text-olive-500 mr-2"></i>Número HC
+          </label>
+          <input type="text" name="hc_numero"
+                 value="{% if historia %}{{ historia.hc_numero }}{% endif %}"
+                 placeholder="ej., 2024-001"
+                 class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+        </div>
+
+        <div>
+          <label class="block text-gray-300 mb-2 font-medium">
+            <i class="fas fa-calendar text-olive-500 mr-2"></i>Fecha *
+          </label>
+          <input type="date" name="fecha" required
+                 value="{% if historia %}{{ historia.fecha }}{% endif %}"
+                 class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+        </div>
+
+        <div>
+          <label class="block text-gray-300 mb-2 font-medium">
+            <i class="fas fa-clock text-olive-500 mr-2"></i>Hora
+          </label>
+          <input type="time" name="hora"
+                 value="{% if historia %}{{ historia.hora }}{% endif %}"
+                 class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+        </div>
+      </div>
+    </div>
+
+    {% if historia.paciente_card %}
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+      <h2 class="text-lg font-bold text-white mb-4 flex items-center">
+        <i class="fas fa-paw text-olive-500 mr-2"></i>Datos del paciente (solo lectura)
+      </h2>
+      <div class="grid md:grid-cols-2 gap-3 text-sm text-gray-300">
+        <div><span class="text-gray-400">Nombre:</span> {{ historia.paciente_card.nombre }}</div>
+        <div><span class="text-gray-400">Especie:</span> {{ historia.paciente_card.especie }}</div>
+        <div><span class="text-gray-400">Raza:</span> {{ historia.paciente_card.raza }}</div>
+        <div><span class="text-gray-400">Dueño:</span> {{ historia.paciente_card.owner_nombre }}</div>
+        <div><span class="text-gray-400">Documento:</span> {{ historia.paciente_card.owner_tipo_documento }} {{ historia.paciente_card.owner_documento }}</div>
+        <div><span class="text-gray-400">Email:</span> {{ historia.paciente_card.owner_email }}</div>
+        <div><span class="text-gray-400">Teléfono:</span> {{ historia.paciente_card.owner_telefono }}</div>
+        <div><span class="text-gray-400">Dirección:</span> {{ historia.paciente_card.owner_direccion }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Sección Anamnesis -->
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+      <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-dark-700">
+        <div class="w-10 h-10 bg-green-700 rounded-lg flex items-center justify-center">
+          <i class="fas fa-notes-medical text-white"></i>
+        </div>
+        <h2 class="text-xl font-bold text-white">Anamnesis</h2>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-gray-300 mb-2 font-medium"><i class="fas fa-utensils text-olive-500 mr-2"></i>Dieta</label>
+          <textarea name="anamnesis_dieta" rows="2"
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">{% if historia %}{{ historia.anamnesis_dieta }}{% endif %}</textarea>
+        </div>
+        <div>
+          <label class="block text-gray-300 mb-2 font-medium"><i class="fas fa-disease text-olive-500 mr-2"></i>Enfermedades previas</label>
+          <textarea name="anamnesis_enfermedades_previas" rows="3"
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">{% if historia %}{{ historia.anamnesis_enfermedades_previas }}{% endif %}</textarea>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-gray-300 mb-2 font-medium"><i class="fas fa-cut text-olive-500 mr-2"></i>Esterilizado</label>
+            <select name="anamnesis_esterilizado"
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+              <option value="">Seleccionar…</option>
+              <option value="Yes" {% if historia and historia.anamnesis_esterilizado == 'Yes' %}selected{% endif %}>Sí</option>
+              <option value="No" {% if historia and historia.anamnesis_esterilizado == 'No' %}selected{% endif %}>No</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-300 mb-2 font-medium"><i class="fas fa-baby text-olive-500 mr-2"></i>Número de partos</label>
+            <input type="number" name="anamnesis_num_partos" min="0"
+                   value="{% if historia %}{{ historia.anamnesis_num_partos }}{% endif %}"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">
+          </div>
+        </div>
+        <div>
+          <label class="block text-gray-300 mb-2 font-medium"><i class="fas fa-briefcase-medical text-olive-500 mr-2"></i>Cirugías previas</label>
+          <textarea name="anamnesis_cirugias_previas" rows="3"
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">{% if historia %}{{ historia.anamnesis_cirugias_previas }}{% endif %}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección Clínica -->
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+      <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-dark-700">
+        <div class="w-10 h-10 bg-purple-700 rounded-lg flex items-center justify-center">
+          <i class="fas fa-stethoscope text-white"></i>
+        </div>
+        <h2 class="text-xl font-bold text-white">Hallazgos clínicos</h2>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-gray-300 mb-2 font-medium">Examen físico</label>
+          <textarea name="examen_fisico" rows="3"
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">{% if historia %}{{ historia.examen_fisico }}{% endif %}</textarea>
+        </div>
+        <div>
+          <label class="block text-gray-300 mb-2 font-medium">Diagnóstico</label>
+          <textarea name="diagnostico" rows="3"
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">{% if historia %}{{ historia.diagnostico }}{% endif %}</textarea>
+        </div>
+        <div>
+          <label class="block text-gray-300 mb-2 font-medium">Tratamiento</label>
+          <textarea name="tratamiento" rows="3"
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">{% if historia %}{{ historia.tratamiento }}{% endif %}</textarea>
+        </div>
+        <div>
+          <label class="block text-gray-300 mb-2 font-medium">Observaciones</label>
+          <textarea name="observaciones" rows="3"
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-olive-600">{% if historia %}{{ historia.observaciones }}{% endif %}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex flex-col sm:flex-row gap-3 justify-end">
+      <a href="{% url 'list_historias' %}"
+         class="inline-flex items-center justify-center space-x-2 bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white font-semibold px-6 py-3 rounded-lg border border-dark-600 hover:border-olive-600 transition-all">
+        <i class="fas fa-times"></i><span>Cancelar</span>
+      </a>
+      <button type="submit"
+              class="inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-600 hover:to-olive-500 text-white font-semibold px-8 py-3 rounded-lg transform hover:scale-105 transition-all shadow-lg hover:shadow-olive-500/50">
+        <i class="fas fa-save"></i>
+        <span>{% if action == 'Add' %}Crear historia{% else %}Guardar cambios{% endif %}</span>
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  {% if action == 'Add' %}
+  document.addEventListener('DOMContentLoaded', function() {
+    var f = document.querySelector('input[name="fecha"]');
+    if (f && !f.value) f.value = new Date().toISOString().split('T')[0];
+  });
+  {% endif %}
+</script>
+
+{% endblock %}

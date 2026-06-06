@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="max-w-4xl mx-auto space-y-6">
+  
+  <!-- Breadcrumb -->
+  <div class="flex items-center space-x-2 text-sm text-gray-400">
+    <a href="{% url 'list_veterinarios' %}" class="hover:text-olive-400 transition-colors">
+      <i class="fas fa-user-md mr-1"></i>Veterinarios
+    </a>
+    <i class="fas fa-chevron-right text-xs"></i>
+    <span class="text-white">{% if action == 'Add' %}Agregar{% else %}Editar{% endif %} Veterinario</span>
+  </div>
+
+  <!-- Header -->
+  <div class="flex items-center space-x-4">
+    <div class="w-16 h-16 bg-gradient-to-br from-purple-700 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+      <i class="fas {% if action == 'Add' %}fa-user-plus{% else %}fa-edit{% endif %} text-white text-2xl"></i>
+    </div>
+    <div>
+      <h1 class="text-3xl font-bold text-white">{% if action == 'Add' %}Agregar{% else %}Editar{% endif %} Veterinario</h1>
+      <p class="text-gray-400">
+        {% if action == 'Add' %}
+          Agrega un nuevo profesional veterinario a tu equipo
+        {% else %}
+          Actualiza la información del veterinario
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %} 
+                  flex items-center animate-fade-in">
+        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-3 text-xl"></i>
+        <span>{{ message }}</span>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Formulario principal -->
+  <form method="POST" enctype="multipart/form-data" class="grid lg:grid-cols-3 gap-6">
+    {% csrf_token %}
+    
+    <!-- Columna del formulario -->
+    <div class="lg:col-span-2 space-y-6">
+      
+      <!-- Profile Picture Card -->
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+        <div class="flex items-center space-x-3 mb-6">
+          <div class="w-12 h-12 bg-gradient-to-br from-pink-700 to-purple-700 rounded-lg flex items-center justify-center">
+            <i class="fas fa-camera text-white text-xl"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-white">Foto de Perfil</h2>
+            <p class="text-sm text-gray-400">Sube una foto del veterinario</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row items-center gap-6">
+          <div class="flex-shrink-0">
+            <div class="relative">
+              <div id="profilePicturePreview" class="w-32 h-32 rounded-full overflow-hidden border-4 border-dark-600 shadow-xl">
+                {% if vet.profile_picture %}
+                  <img src="{{ vet.profile_picture }}" alt="Profile" class="w-full h-full object-cover">
+                {% else %}
+                  <div class="w-full h-full bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center">
+                    <span class="text-white text-4xl font-bold">
+                      {% if vet.nombre %}{{ vet.nombre|slice:":2"|upper }}{% else %}VT{% endif %}
+                    </span>
+                  </div>
+                {% endif %}
+              </div>
+              
+              <div class="absolute bottom-0 right-0 w-10 h-10 bg-purple-600 hover:bg-purple-500 rounded-full border-4 border-dark-800 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110"
+                   onclick="document.getElementById('profile_picture').click()">
+                <i class="fas fa-camera text-white text-sm"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-1 w-full">
+            <input type="file" 
+                   id="profile_picture" 
+                   name="profile_picture"
+                   accept="image/*"
+                   class="hidden"
+                   onchange="previewImage(event)">
+            
+            <div class="space-y-3">
+              <button type="button" 
+                      onclick="document.getElementById('profile_picture').click()"
+                      class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-purple-700 to-pink-700 
+                             hover:from-purple-600 hover:to-pink-600 text-white rounded-lg
+                             transition-all duration-300 shadow-lg hover:shadow-purple-500/50 font-medium
+                             transform hover:scale-105 inline-flex items-center justify-center space-x-2">
+                <i class="fas fa-upload"></i>
+                <span>Elegir Foto</span>
+              </button>
+
+              <div id="fileInfo" class="hidden">
+                <div class="flex items-center space-x-2 text-sm text-gray-400">
+                  <i class="fas fa-file-image text-purple-400"></i>
+                  <span id="fileName"></span>
+                  <button type="button" 
+                          onclick="clearFileInput()"
+                          class="text-red-400 hover:text-red-300 ml-2">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="text-xs text-gray-500 space-y-1">
+                <p><i class="fas fa-info-circle mr-1 text-blue-400"></i>Tamaño máximo: 5MB</p>
+                <p><i class="fas fa-check-circle mr-1 text-green-400"></i>Aceptado: JPG, PNG, GIF</p>
+              </div>
+
+              {% if vet.profile_picture %}
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" 
+                       name="remove_profile_picture" 
+                       value="true"
+                       class="w-4 h-4 text-red-600 bg-dark-900 border-dark-600 rounded 
+                              focus:ring-red-500 focus:ring-2">
+                <span class="text-sm text-red-400 hover:text-red-300">
+                  <i class="fas fa-trash-alt mr-1"></i>Eliminar foto actual
+                </span>
+              </label>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Information (NEW) -->
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-8 shadow-xl">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center border-b border-dark-600 pb-2">
+          <i class="fas fa-user-circle text-blue-500 mr-2"></i>
+          Información de la Cuenta
+        </h3>
+        
+        <div class="space-y-4">
+          <!-- Username -->
+          <div class="group">
+            <label class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-user text-blue-500 mr-2"></i>
+              Nombre de Usuario *
+            </label>
+            <input type="text" 
+                   name="username" 
+                   value="{{ vet.User|default:'' }}" 
+                   required
+                   {% if action == 'Edit' %}readonly{% endif %}
+                   placeholder="e.g., dr_smith"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                          focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent
+                          transition-all duration-300 {% if action == 'Edit' %}cursor-not-allowed opacity-75{% else %}group-hover:border-blue-700{% endif %}">
+            <p class="text-xs text-gray-500 mt-1 flex items-center">
+              <i class="fas fa-info-circle mr-1"></i>
+              {% if action == 'Add' %}Para el acceso al sistema{% else %}El nombre de usuario no se puede cambiar{% endif %}
+            </p>
+          </div>
+
+          <!-- Email -->
+          <div class="group">
+            <label class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-envelope text-blue-500 mr-2"></i>
+              Correo Electrónico *
+            </label>
+            <input type="email" 
+                   name="email"
+                   value="{{ vet.Email|default:'' }}"
+                   required
+                   placeholder="dr.smith@petcare.com"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                          focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent
+                          transition-all duration-300 group-hover:border-blue-700">
+          </div>
+
+          <!-- Password -->
+          <div class="group">
+            <label class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-key text-blue-500 mr-2"></i>
+              Contraseña {% if action == 'Add' %}*{% endif %}
+            </label>
+            <input type="password" 
+                   name="password"
+                   {% if action == 'Add' %}required{% endif %}
+                   placeholder="{% if action == 'Add' %}Mínimo 6 caracteres{% else %}Dejar en blanco para mantener la actual{% endif %}"
+                   minlength="6"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                          focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent
+                          transition-all duration-300 group-hover:border-blue-700">
+            <p class="text-xs text-gray-500 mt-1 flex items-center">
+              <i class="fas fa-shield-alt mr-1"></i>
+              {% if action == 'Add' %}Se usará para iniciar sesión{% else %}Dejar vacío para mantener la contraseña actual{% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Basic Information -->
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-8 shadow-xl">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center border-b border-dark-600 pb-2">
+          <i class="fas fa-user-md text-olive-500 mr-2"></i>
+          Información Profesional
+        </h3>
+        
+        <div class="space-y-4">
+          <!-- Nombre -->
+          <div class="group">
+            <label class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-id-badge text-olive-500 mr-2"></i>
+              Nombre Completo *
+            </label>
+            <input type="text" 
+                   name="nombre" 
+                   value="{{ vet.nombre|default:'' }}" 
+                   required
+                   placeholder="e.g., John Smith"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                          focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                          transition-all duration-300 group-hover:border-olive-700"
+                   oninput="updatePreview()">
+            <p class="text-xs text-gray-500 mt-1 flex items-center">
+              <i class="fas fa-info-circle mr-1"></i>
+              Nombre legal completo del veterinario
+            </p>
+          </div>
+
+          <!-- Especialidad -->
+          <div class="group">
+            <label class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-stethoscope text-olive-500 mr-2"></i>
+              Especialidad *
+            </label>
+            <select name="especialidad" 
+                    required
+                    class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                           focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                           transition-all duration-300 group-hover:border-olive-700"
+                    onchange="updatePreview()">
+              <option value="">Selecciona una especialidad...</option>
+              <option value="General Practice" {% if vet.especialidad == 'General Practice' %}selected{% endif %}>🏥 Medicina General</option>
+              <option value="Surgery" {% if vet.especialidad == 'Surgery' %}selected{% endif %}>⚕️ Cirugía</option>
+              <option value="Internal Medicine" {% if vet.especialidad == 'Internal Medicine' %}selected{% endif %}>💊 Medicina Interna</option>
+              <option value="Dentistry" {% if vet.especialidad == 'Dentistry' %}selected{% endif %}>🦷 Odontología</option>
+              <option value="Dermatology" {% if vet.especialidad == 'Dermatology' %}selected{% endif %}>🔬 Dermatología</option>
+              <option value="Cardiology" {% if vet.especialidad == 'Cardiology' %}selected{% endif %}>❤️ Cardiología</option>
+              <option value="Oncology" {% if vet.especialidad == 'Oncology' %}selected{% endif %}>🎗️ Oncología</option>
+              <option value="Ophthalmology" {% if vet.especialidad == 'Ophthalmology' %}selected{% endif %}>👁️ Oftalmología</option>
+              <option value="Emergency Care" {% if vet.especialidad == 'Emergency Care' %}selected{% endif %}>🚨 Urgencias</option>
+              <option value="Exotic Animals" {% if vet.especialidad == 'Exotic Animals' %}selected{% endif %}>🦜 Animales Exóticos</option>
+              <option value="Other" {% if vet.especialidad == 'Other' %}selected{% endif %}>⭐ Otros</option>
+            </select>
+          </div>
+
+          <!-- Phone -->
+          <div class="group">
+            <label class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-phone text-olive-500 mr-2"></i>
+              Número de Teléfono
+            </label>
+            <input type="tel" 
+                   name="phone"
+                   value="{{ vet.phone|default:'' }}"
+                   placeholder="+1 (555) 000-0000"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                          focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                          transition-all duration-300 group-hover:border-olive-700">
+          </div>
+
+          <!-- License -->
+          <div class="group">
+            <label class="block text-gray-300 mb-2 font-medium">
+              <i class="fas fa-certificate text-olive-500 mr-2"></i>
+              Número de Licencia
+            </label>
+            <input type="text"
+                   name="license"
+                   value="{{ vet.license|default:'' }}"
+                   placeholder="VET-12345"
+                   maxlength="50"
+                   class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                          focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                          transition-all duration-300 group-hover:border-olive-700"
+                   oninput="updatePreview()">
+          </div>
+
+          <!-- Services offered -->
+          <div>
+            <p class="block text-gray-300 mb-3 font-medium">
+              <i class="fas fa-concierge-bell text-olive-500 mr-2"></i>Servicios ofrecidos
+            </p>
+            <div class="space-y-2">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" name="ofrece_consulta_medica" value="on"
+                       {% if vet.ofrece_consulta_medica or action == 'Add' %}checked{% endif %}
+                       class="w-5 h-5 rounded bg-dark-900 border-dark-600 text-olive-600 focus:ring-olive-600">
+                <span class="text-gray-300">🩺 Consultas médicas (veterinario)</span>
+              </label>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" name="ofrece_peluqueria" value="on"
+                       {% if vet.ofrece_peluqueria %}checked{% endif %}
+                       class="w-5 h-5 rounded bg-dark-900 border-dark-600 text-olive-600 focus:ring-olive-600">
+                <span class="text-gray-300">✂️ Peluquería y baño</span>
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle mr-1"></i>Un profesional puede ofrecer ambos servicios al mismo tiempo.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="flex flex-col sm:flex-row gap-3 pt-4">
+        <button type="submit"
+                class="flex-1 bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-600 hover:to-olive-500
+                       text-white font-semibold py-3 rounded-lg transform hover:scale-[1.02] active:scale-[0.98]
+                       transition-all duration-300 shadow-lg hover:shadow-olive-500/50 flex items-center justify-center">
+          <i class="fas {% if action == 'Add' %}fa-user-plus{% else %}fa-save{% endif %} mr-2"></i>
+          {% if action == 'Add' %}Agregar{% else %}Guardar{% endif %} Veterinario
+        </button>
+        
+        <a href="{% url 'list_veterinarios' %}"
+           class="flex-1 bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white font-semibold py-3 rounded-lg
+                  transition-all duration-300 border border-dark-600 hover:border-dark-500 flex items-center justify-center">
+          <i class="fas fa-times mr-2"></i>
+          Cancelar
+        </a>
+      </div>
+    </div>
+
+    <!-- Columna lateral - Preview -->
+    <div class="lg:col-span-1 space-y-6">
+      
+      <!-- Preview Card -->
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl sticky top-6">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+          <i class="fas fa-eye text-olive-500 mr-2"></i>
+          Vista Previa
+        </h3>
+        
+        <div class="bg-dark-900 border border-dark-600 rounded-lg p-4 text-center">
+          <div id="previewAvatar" class="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden border-2 border-purple-600">
+            {% if vet.profile_picture %}
+              <img src="{{ vet.profile_picture }}" class="w-full h-full object-cover">
+            {% else %}
+              <div class="w-full h-full bg-gradient-to-br from-purple-700 to-purple-600 flex items-center justify-center">
+                <span class="text-white text-2xl font-bold" id="previewInitials">VT</span>
+              </div>
+            {% endif %}
+          </div>
+          
+          <p class="text-white font-bold text-lg" id="previewName">Dr. Nombre</p>
+          <p class="text-olive-400 text-sm mb-3" id="previewSpecialty">Especialidad</p>
+          
+          <div class="space-y-2 text-xs border-t border-dark-600 pt-3">
+            <div class="flex items-center justify-center text-gray-400" id="previewLicenseContainer" style="display: none;">
+              <i class="fas fa-id-card text-olive-500 mr-2"></i>
+              <span id="previewLicense"></span>
+            </div>
+          </div>
+
+          <div class="inline-flex items-center bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs mt-3">
+            <div class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+            Disponible
+          </div>
+        </div>
+      </div>
+
+      <!-- Tips -->
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+          <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+          Consejos
+        </h3>
+        
+        <div class="space-y-3 text-sm">
+          <div class="flex items-start space-x-2 text-gray-300">
+            <i class="fas fa-check-circle text-olive-500 mt-0.5"></i>
+            <p>El nombre de usuario se usará para iniciar sesión</p>
+          </div>
+          <div class="flex items-start space-x-2 text-gray-300">
+            <i class="fas fa-check-circle text-olive-500 mt-0.5"></i>
+            <p>La contraseña debe tener al menos 6 caracteres</p>
+          </div>
+          <div class="flex items-start space-x-2 text-gray-300">
+            <i class="fas fa-check-circle text-olive-500 mt-0.5"></i>
+            <p>Sube una foto profesional</p>
+          </div>
+          <div class="flex items-start space-x-2 text-gray-300">
+            <i class="fas fa-check-circle text-olive-500 mt-0.5"></i>
+            <p>La licencia verifica las credenciales</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<script>
+  function previewImage(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('profilePicturePreview');
+    const previewAvatar = document.getElementById('previewAvatar');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        event.target.value = '';
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        event.target.value = '';
+        return;
+      }
+      
+      fileName.textContent = file.name;
+      fileInfo.classList.remove('hidden');
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+        previewAvatar.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+  
+  function clearFileInput() {
+    document.getElementById('profile_picture').value = '';
+    document.getElementById('fileInfo').classList.add('hidden');
+    location.reload();
+  }
+
+  function updatePreview() {
+    const nombre = document.querySelector('input[name="nombre"]').value;
+    const especialidad = document.querySelector('select[name="especialidad"]').value;
+    const license = document.querySelector('input[name="license"]').value;
+    
+    document.getElementById('previewName').textContent = nombre ? 'Dr. ' + nombre : 'Dr. Nombre';
+    document.getElementById('previewSpecialty').textContent = especialidad || 'Especialidad';
+    
+    const initials = nombre ? nombre.slice(0, 2).toUpperCase() : 'VT';
+    const initialsElement = document.getElementById('previewInitials');
+    if (initialsElement) {
+      initialsElement.textContent = initials;
+    }
+    
+    const licenseContainer = document.getElementById('previewLicenseContainer');
+    const licenseSpan = document.getElementById('previewLicense');
+    if (license) {
+      licenseSpan.textContent = license;
+      licenseContainer.style.display = 'flex';
+    } else {
+      licenseContainer.style.display = 'none';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('input[name="nombre"]').addEventListener('input', updatePreview);
+    document.querySelector('select[name="especialidad"]').addEventListener('change', updatePreview);
+    document.querySelector('input[name="license"]').addEventListener('input', updatePreview);
+    
+    updatePreview();
+  });
+</script>
+
+{% endblock %}

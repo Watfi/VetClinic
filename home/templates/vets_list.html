@@ -1,0 +1,512 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="space-y-6 max-w-7xl mx-auto">
+  
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-white flex items-center">
+        <i class="fas fa-user-md text-olive-500 mr-3"></i>
+        Veterinarios
+      </h1>
+      <p class="text-gray-400 mt-1">Nuestro equipo médico experto</p>
+    </div>
+    
+    <a href="{% url 'add_veterinario' %}" 
+       class="inline-flex items-center space-x-2 bg-gradient-to-r from-olive-700 to-olive-600 
+              hover:from-olive-600 hover:to-olive-500 text-white font-semibold px-6 py-3 rounded-lg
+              transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-olive-500/50">
+      <i class="fas fa-user-plus"></i>
+      <span>Agregar Veterinario</span>
+    </a>
+  </div>
+
+  <!-- Mensajes -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %}">
+        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if vets %}
+    <!-- Stats rápidas -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-4 flex items-center space-x-4">
+        <div class="w-12 h-12 bg-purple-700 rounded-lg flex items-center justify-center">
+          <i class="fas fa-user-md text-white text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-400 text-sm">Total Veterinarios</p>
+          <p class="text-2xl font-bold text-white" id="totalVets">{{ vets|length }}</p>
+        </div>
+      </div>
+      
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-4 flex items-center space-x-4">
+        <div class="w-12 h-12 bg-olive-700 rounded-lg flex items-center justify-center">
+          <i class="fas fa-stethoscope text-white text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-400 text-sm">Especialistas</p>
+          <p class="text-2xl font-bold text-white">{{ vets|length }}</p>
+        </div>
+      </div>
+
+      <div class="bg-dark-800 border border-dark-700 rounded-xl p-4 flex items-center space-x-4">
+        <div class="w-12 h-12 bg-blue-700 rounded-lg flex items-center justify-center">
+          <i class="fas fa-heart text-white text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-400 text-sm">Disponibles</p>
+          <p class="text-2xl font-bold text-white">{{ vets|length }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buscador Avanzado -->
+    <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 shadow-xl">
+      <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <div class="flex-1 relative">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+          <input type="text" 
+                 id="searchInput"
+                 placeholder="Buscar por nombre, especialidad, correo, teléfono o licencia..."
+                 class="w-full bg-dark-900 border border-dark-600 rounded-lg pl-12 pr-4 py-3 text-white
+                        focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                        transition-all duration-300"
+                 oninput="searchVets()">
+        </div>
+
+        <div class="md:w-64">
+          <select id="specialtyFilter" 
+                  onchange="searchVets()"
+                  class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                         focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent">
+            <option value="">Todas las Especialidades</option>
+            <option value="General Practice">🏥 Medicina General</option>
+            <option value="Surgery">⚕️ Cirugía</option>
+            <option value="Internal Medicine">💊 Medicina Interna</option>
+            <option value="Dentistry">🦷 Odontología</option>
+            <option value="Dermatology">🔬 Dermatología</option>
+            <option value="Cardiology">❤️ Cardiología</option>
+            <option value="Oncology">🎗️ Oncología</option>
+            <option value="Ophthalmology">👁️ Oftalmología</option>
+            <option value="Emergency Care">🚨 Urgencias</option>
+            <option value="Exotic Animals">🦜 Animales Exóticos</option>
+            <option value="Other">⭐ Otros</option>
+          </select>
+        </div>
+
+        <button onclick="clearSearch()"
+                class="bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white px-6 py-3 rounded-lg
+                       transition-all duration-300 border border-dark-600 hover:border-olive-600">
+          <i class="fas fa-times mr-2"></i>Limpiar
+        </button>
+      </div>
+
+      <div class="mt-3 flex items-center justify-between">
+        <p class="text-sm text-gray-400">
+          <span id="resultCount">{{ vets|length }}</span> veterinarios encontrados
+        </p>
+      </div>
+    </div>
+
+    <!-- Grid de veterinarios -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="vetsGrid">
+      {% for vet in vets %}
+        <div class="vet-card bg-dark-800 border border-dark-700 rounded-xl overflow-hidden 
+                    hover:border-olive-600 hover:shadow-2xl hover:shadow-olive-500/20
+                    transform hover:-translate-y-2 transition-all duration-300 group"
+             data-name="{{ vet.nombre|lower }}"
+             data-specialty="{{ vet.especialidad|lower }}"
+             data-email="{{ vet.Email|default:''|lower }}"
+             data-phone="{{ vet.phone|default:''|lower }}"
+             data-license="{{ vet.license|default:''|lower }}">
+          
+          <!-- Header con imagen de fondo -->
+          <div class="relative h-24 bg-gradient-to-br from-olive-800 to-olive-700">
+            <div class="absolute inset-0 opacity-20 overflow-hidden">
+              <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400'); background-size: cover; background-position: center;"></div>
+            </div>
+          </div>
+          
+          <!-- Avatar con foto o iniciales -->
+          <div class="relative -mt-12 mb-2">
+            <div class="flex justify-center">
+              <div class="w-24 h-24 rounded-full bg-dark-900 p-1 shadow-xl">
+                <div class="w-full h-full rounded-full flex items-center justify-center overflow-hidden">
+                  {% if vet.profile_picture %}
+                    <!-- Mostrar foto de perfil -->
+                    <img src="{{ vet.profile_picture }}" 
+                         alt="{{ vet.nombre }}" 
+                         class="w-full h-full object-cover">
+                  {% else %}
+                    <!-- Avatar con iniciales -->
+                    <div class="w-full h-full flex items-center justify-center
+                                {% cycle 'bg-gradient-to-br from-purple-600 to-purple-700' 'bg-gradient-to-br from-blue-600 to-blue-700' 'bg-gradient-to-br from-green-600 to-green-700' 'bg-gradient-to-br from-orange-600 to-orange-700' 'bg-gradient-to-br from-pink-600 to-pink-700' 'bg-gradient-to-br from-teal-600 to-teal-700' 'bg-gradient-to-br from-indigo-600 to-indigo-700' 'bg-gradient-to-br from-red-600 to-red-700' %}">
+                      <span class="text-white text-3xl font-bold">
+                        {{ vet.nombre|slice:":2"|upper }}
+                      </span>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <!-- Badge de estado -->
+              <div class="absolute top-16 left-1/2 transform translate-x-6 w-6 h-6 bg-green-500 border-4 border-dark-900 rounded-full"></div>
+            </div>
+          </div>
+
+          <!-- Información del veterinario -->
+          <div class="px-6 pb-6">
+            <h3 class="text-xl font-bold text-white mb-1 text-center group-hover:text-olive-400 transition-colors vet-name">
+              Dr. {{ vet.nombre }}
+            </h3>
+            
+            <div class="flex justify-center mb-4">
+              <div class="inline-flex items-center space-x-1 bg-olive-700/30 text-olive-400 px-3 py-1 rounded-full text-xs font-semibold vet-specialty">
+                <i class="fas fa-award"></i>
+                <span>{{ vet.especialidad }}</span>
+              </div>
+            </div>
+
+            <!-- Hidden text for search -->
+            <div class="hidden">
+              <span class="vet-email">{{ vet.Email|default:'' }}</span>
+              <span class="vet-phone">{{ vet.phone|default:'' }}</span>
+              <span class="vet-license">{{ vet.license|default:'' }}</span>
+            </div>
+
+            <div class="space-y-2 mb-4 text-sm">
+              <div class="flex items-center justify-center text-gray-400">
+                <i class="fas fa-stethoscope text-olive-500 w-5"></i>
+                <span class="ml-2">Medicina Veterinaria</span>
+              </div>
+              <div class="flex items-center justify-center text-gray-400">
+                <i class="fas fa-calendar-check text-olive-500 w-5"></i>
+                <span class="ml-2">Disponible para citas</span>
+              </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex space-x-2 pt-4 border-t border-dark-700">
+              <a href="{% url 'edit_veterinario' vet.id %}" 
+                 class="flex-1 bg-olive-700 hover:bg-olive-600 text-white text-center py-2 rounded-lg
+                        transition-colors duration-300 text-sm font-medium">
+                <i class="fas fa-edit mr-1"></i>Editar
+              </a>
+              <a href="{% url 'delete_veterinario' vet.id %}" 
+                 onclick="return confirm('¿Estás seguro de que deseas eliminar al Dr. {{ vet.nombre }}?')"
+                 class="flex-1 bg-red-900/50 hover:bg-red-900 text-red-300 hover:text-white text-center py-2 rounded-lg
+                        transition-colors duration-300 text-sm font-medium border border-red-700">
+                <i class="fas fa-trash-alt mr-1"></i>Eliminar
+              </a>
+            </div>
+
+            <!-- Ver perfil -->
+            <button onclick="openProfile({
+              id: '{{ vet.id }}',
+              nombre: '{{ vet.nombre|escapejs }}',
+              especialidad: '{{ vet.especialidad|escapejs }}',
+              email: '{% if vet.Email %}{{ vet.Email|escapejs }}{% endif %}',
+              phone: '{% if vet.phone %}{{ vet.phone|escapejs }}{% endif %}',
+              license: '{% if vet.license %}{{ vet.license|escapejs }}{% endif %}',
+              profile_picture: '{% if vet.profile_picture %}{{ vet.profile_picture|escapejs }}{% endif %}'
+            })" 
+                    class="w-full mt-3 bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white py-2 rounded-lg
+                           transition-colors duration-300 text-sm font-medium border border-dark-600">
+              <i class="fas fa-info-circle mr-1"></i>Ver Perfil
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- No Results -->
+    <div id="noResults" class="hidden bg-dark-800 border border-dark-700 rounded-xl p-12 text-center">
+      <div class="max-w-md mx-auto">
+        <div class="w-20 h-20 mx-auto mb-4 bg-dark-700 rounded-full flex items-center justify-center">
+          <i class="fas fa-search text-gray-600 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">No se encontraron veterinarios</h3>
+        <p class="text-gray-400 mb-4">Intenta ajustar los términos de búsqueda o filtros</p>
+        <button onclick="clearSearch()"
+                class="bg-olive-700 hover:bg-olive-600 text-white px-6 py-2 rounded-lg transition-colors">
+          <i class="fas fa-redo mr-2"></i>Limpiar Búsqueda
+        </button>
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Estado vacío -->
+    <div class="bg-dark-800 border border-dark-700 rounded-2xl p-12 text-center">
+      <div class="max-w-md mx-auto">
+        <div class="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-purple-800 to-purple-700 rounded-full 
+                    flex items-center justify-center shadow-2xl">
+          <i class="fas fa-user-md text-white text-5xl"></i>
+        </div>
+
+        <h3 class="text-2xl font-bold text-white mb-3">Aún no hay veterinarios</h3>
+        <p class="text-gray-400 mb-6">
+          Empieza agregando tu primer veterinario para brindar atención profesional a las mascotas.
+        </p>
+
+        <a href="{% url 'add_veterinario' %}" 
+           class="inline-flex items-center space-x-2 bg-gradient-to-r from-olive-700 to-olive-600 
+                  hover:from-olive-600 hover:to-olive-500 text-white font-semibold px-8 py-3 rounded-lg
+                  transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-olive-500/50">
+          <i class="fas fa-user-plus"></i>
+          <span>Agregar Primer Veterinario</span>
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- Modal de Perfil -->
+<div id="profileModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-dark-800 border border-dark-700 rounded-2xl max-w-2xl w-full shadow-2xl transform transition-all scale-95"
+       onclick="event.stopPropagation()">
+    
+    <div class="relative h-32 bg-gradient-to-br from-olive-800 to-olive-700 rounded-t-2xl overflow-hidden">
+      <div class="absolute inset-0 opacity-20">
+        <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800'); background-size: cover;"></div>
+      </div>
+      
+      <button onclick="closeProfile()" 
+              class="absolute top-4 right-4 w-10 h-10 bg-dark-900/80 hover:bg-dark-900 rounded-full
+                     flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+      
+      <!-- Avatar en modal -->
+      <div class="absolute -bottom-16 left-8">
+        <div class="w-32 h-32 rounded-full bg-dark-900 p-1.5 shadow-2xl">
+          <div id="modalAvatar" class="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-olive-600 to-olive-700 
+                                       flex items-center justify-center">
+            <span class="text-white text-5xl font-bold">VT</span>
+          </div>
+        </div>
+        <div class="absolute bottom-2 right-2 w-8 h-8 bg-green-500 border-4 border-dark-900 rounded-full"></div>
+      </div>
+    </div>
+
+    <div class="p-8 pt-20">
+      <div class="mb-6">
+        <h2 class="text-3xl font-bold text-white mb-2" id="modalName">Dr. Nombre</h2>
+        <div class="flex items-center space-x-3">
+          <span class="inline-flex items-center bg-olive-700/30 text-olive-400 px-4 py-1.5 rounded-full text-sm font-semibold">
+            <i class="fas fa-award mr-2"></i>
+            <span id="modalSpecialty">Especialidad</span>
+          </span>
+          <span class="inline-flex items-center bg-green-700/30 text-green-400 px-4 py-1.5 rounded-full text-sm font-semibold">
+            <div class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+            Disponible
+          </span>
+        </div>
+      </div>
+
+      <div class="bg-dark-900 border border-dark-600 rounded-xl p-6 mb-6">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+          <i class="fas fa-address-card text-olive-500 mr-2"></i>
+          Información de Contacto
+        </h3>
+        
+        <div class="space-y-4">
+          <div class="flex items-center space-x-3" id="modalEmailContainer">
+            <div class="w-10 h-10 bg-olive-700 rounded-lg flex items-center justify-center">
+              <i class="fas fa-envelope text-white"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-gray-500">Correo Electrónico</p>
+              <a href="#" id="modalEmailLink" class="text-white hover:text-olive-400 transition-colors">
+                <span id="modalEmail">No proporcionado</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-3" id="modalPhoneContainer">
+            <div class="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center">
+              <i class="fas fa-phone text-white"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-gray-500">Número de Teléfono</p>
+              <a href="#" id="modalPhoneLink" class="text-white hover:text-olive-400 transition-colors">
+                <span id="modalPhone">No proporcionado</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-3" id="modalLicenseContainer">
+            <div class="w-10 h-10 bg-purple-700 rounded-lg flex items-center justify-center">
+              <i class="fas fa-id-card text-white"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-gray-500">Número de Licencia</p>
+              <p class="text-white" id="modalLicense">No proporcionado</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex space-x-3">
+        <a href="#" id="modalEditLink"
+           class="flex-1 bg-olive-700 hover:bg-olive-600 text-white text-center py-3 rounded-lg
+                  transition-colors duration-300 font-medium">
+          <i class="fas fa-edit mr-2"></i>Editar Perfil
+        </a>
+        <button onclick="closeProfile()"
+                class="flex-1 bg-dark-900 hover:bg-dark-700 text-gray-300 hover:text-white py-3 rounded-lg
+                       transition-colors duration-300 font-medium border border-dark-600">
+          <i class="fas fa-times mr-2"></i>Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allCards = [];
+  let currentVet = null;
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    allCards = Array.from(document.querySelectorAll('.vet-card'));
+    
+    const cards = document.querySelectorAll('.vet-card');
+    cards.forEach((card, index) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      setTimeout(() => {
+        card.style.transition = 'all 0.5s ease-in-out';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, index * 100);
+    });
+
+    document.getElementById('profileModal').addEventListener('click', function(e) {
+      if (e.target === this) closeProfile();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeProfile();
+    });
+  });
+
+  function searchVets() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+    const specialtyFilter = document.getElementById('specialtyFilter').value.toLowerCase();
+    let visibleCount = 0;
+
+    allCards.forEach(card => {
+      const name = card.dataset.name || '';
+      const specialty = card.dataset.specialty || '';
+      const email = card.dataset.email || '';
+      const phone = card.dataset.phone || '';
+      const license = card.dataset.license || '';
+
+      const matchesSearch = !searchTerm || 
+        name.includes(searchTerm) || specialty.includes(searchTerm) ||
+        email.includes(searchTerm) || phone.includes(searchTerm) || license.includes(searchTerm);
+
+      const matchesSpecialty = !specialtyFilter || specialty === specialtyFilter;
+
+      if (matchesSearch && matchesSpecialty) {
+        card.style.display = '';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    document.getElementById('resultCount').textContent = visibleCount;
+    document.getElementById('totalVets').textContent = visibleCount;
+
+    const noResults = document.getElementById('noResults');
+    const grid = document.getElementById('vetsGrid');
+    
+    if (visibleCount === 0) {
+      grid.style.display = 'none';
+      noResults.classList.remove('hidden');
+    } else {
+      grid.style.display = 'grid';
+      noResults.classList.add('hidden');
+    }
+  }
+
+  function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('specialtyFilter').value = '';
+    searchVets();
+  }
+
+  function openProfile(vet) {
+    currentVet = vet;
+    const modal = document.getElementById('profileModal');
+    
+    // Actualizar avatar
+    const modalAvatar = document.getElementById('modalAvatar');
+    if (vet.profile_picture) {
+      modalAvatar.innerHTML = `<img src="${vet.profile_picture}" class="w-full h-full object-cover">`;
+    } else {
+      const initials = vet.nombre.substring(0, 2).toUpperCase();
+      const colors = [
+        'from-purple-600 to-purple-700', 'from-blue-600 to-blue-700', 
+        'from-green-600 to-green-700', 'from-orange-600 to-orange-700'
+      ];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      modalAvatar.outerHTML = `
+        <div id="modalAvatar" class="w-full h-full rounded-full bg-gradient-to-br ${randomColor} 
+                                       flex items-center justify-center">
+          <span class="text-white text-5xl font-bold">${initials}</span>
+        </div>
+      `;
+    }
+    
+    document.getElementById('modalName').textContent = 'Dr. ' + vet.nombre;
+    document.getElementById('modalSpecialty').textContent = vet.especialidad;
+    
+    // ✅ CORREGIDO: usar vet.email (minúscula) que viene del parámetro
+    if (vet.email) {
+      document.getElementById('modalEmail').textContent = vet.email;
+      document.getElementById('modalEmailLink').href = 'mailto:' + vet.email;
+    } else {
+      document.getElementById('modalEmail').textContent = 'Not provided';
+    }
+    
+    if (vet.phone) {
+      document.getElementById('modalPhone').textContent = vet.phone;
+      document.getElementById('modalPhoneLink').href = 'tel:' + vet.phone;
+    } else {
+      document.getElementById('modalPhone').textContent = 'Not provided';
+    }
+    
+    if (vet.license) {
+      document.getElementById('modalLicense').textContent = vet.license;
+    } else {
+      document.getElementById('modalLicense').textContent = 'Not provided';
+    }
+    
+    const editButton = document.querySelector(`a[href*="edit_veterinario"][href*="${vet.id}"]`);
+    document.getElementById('modalEditLink').href = editButton ? editButton.href : `/vets/edit/${vet.id}/`;
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+      modal.querySelector('div > div').classList.remove('scale-95');
+      modal.querySelector('div > div').classList.add('scale-100');
+    }, 10);
+  }
+
+  function closeProfile() {
+    const modal = document.getElementById('profileModal');
+    modal.querySelector('div > div').classList.remove('scale-100');
+    modal.querySelector('div > div').classList.add('scale-95');
+    setTimeout(() => modal.classList.add('hidden'), 200);
+  }
+</script>
+
+{% endblock %}
