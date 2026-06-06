@@ -14,3 +14,16 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Hello.settings')
 
 application = get_wsgi_application()
+
+# Run migrations and seed admin on Vercel startup
+if os.environ.get('VERCEL') == '1':
+    try:
+        from django.core.management import call_command
+        print("Vercel startup: Running migrations...")
+        call_command('migrate', interactive=False)
+        print("Vercel startup: Running seed_admin...")
+        call_command('seed_admin', interactive=False)
+    except Exception as e:
+        import sys
+        print(f"Vercel startup error: {e}", file=sys.stderr)
+

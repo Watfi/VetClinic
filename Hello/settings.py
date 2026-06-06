@@ -12,7 +12,12 @@ DEBUG = False
 
 TIME_ZONE = 'America/Bogota'
 USE_TZ = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+_ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
+if _ALLOWED_HOSTS_ENV:
+    ALLOWED_HOSTS = [h.strip() for h in _ALLOWED_HOSTS_ENV.split(',')]
+else:
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.vercel.app', 'vercel.app']
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
