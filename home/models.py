@@ -647,7 +647,7 @@ class MovimientoInventario(models.Model):
     pago_pendiente = models.BooleanField(default=False)
     proveedor = models.CharField(max_length=200, blank=True, default="")
     nit_proveedor = models.CharField(max_length=40, blank=True, default="")
-    archivo_factura = models.FileField(upload_to="facturas_inventario/", null=True, blank=True)
+    archivo_factura = models.TextField(blank=True, null=True)
     # Exit-specific fields
     motivo = models.CharField(max_length=255, blank=True, default="")
     # General

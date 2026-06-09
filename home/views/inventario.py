@@ -211,6 +211,7 @@ def list_movimientos(request, producto_id):
 
 @admin_required
 def add_entrada(request, producto_id):
+    import base64 as _b64
     producto = get_object_or_404(Producto, pk=int(producto_id))
     if request.method == "POST":
         cantidad = _parse_int(request.POST.get("cantidad"), 0)
@@ -223,6 +224,14 @@ def add_entrada(request, producto_id):
 
         fecha_factura = request.POST.get("fecha_factura") or None
         fecha_pago = request.POST.get("fecha_pago") or None
+
+        # Handle file as base64 so it works on read-only filesystems (Vercel)
+        archivo_b64 = None
+        if request.FILES.get("archivo_factura"):
+            f = request.FILES["archivo_factura"]
+            content_type = f.content_type or "application/octet-stream"
+            data = _b64.b64encode(f.read()).decode("utf-8")
+            archivo_b64 = f"data:{content_type};base64,{data};name={f.name}"
 
         mov = MovimientoInventario.objects.create(
             producto=producto,
@@ -237,10 +246,8 @@ def add_entrada(request, producto_id):
             proveedor=(request.POST.get("proveedor") or "").strip(),
             nit_proveedor=(request.POST.get("nit_proveedor") or "").strip(),
             notas=(request.POST.get("notas") or "").strip(),
+            archivo_factura=archivo_b64,
         )
-        if request.FILES.get("archivo_factura"):
-            mov.archivo_factura = request.FILES["archivo_factura"]
-            mov.save()
 
         producto.stock += cantidad
         producto.save(update_fields=["stock"])
@@ -439,14 +446,25 @@ def entrada_pdf(request, mov_id):
         story.append(Paragraph("<b>FACTURA ADJUNTA</b>", head_s))
         story.append(Spacer(1, 0.2*cm))
         try:
-            file_path = mov.archivo_factura.path
-            ext = os.path.splitext(file_path)[1].lower()
-            if ext in (".jpg", ".jpeg", ".png", ".gif", ".webp") and RLImage:
-                img = RLImage(file_path, width=15*cm, height=10*cm)
-                img.hAlign = "LEFT"
-                story.append(img)
+            import base64 as _b64
+            raw = mov.archivo_factura  # "data:<mime>;base64,<data>;name=<filename>"
+            if raw and raw.startswith("data:"):
+                # Parse data URI: data:<mime>;base64,<data>;name=<name>
+                header, b64data = raw.split(",", 1)
+                # Strip optional ;name=... suffix from b64data
+                if ";name=" in b64data:
+                    b64data = b64data.split(";name=")[0]
+                mime = header.split(":")[1].split(";")[0]
+                file_bytes = _b64.b64decode(b64data)
+                if mime in ("image/jpeg", "image/png", "image/gif", "image/webp") and RLImage:
+                    img_buf = io.BytesIO(file_bytes)
+                    img = RLImage(img_buf, width=15*cm, height=10*cm)
+                    img.hAlign = "LEFT"
+                    story.append(img)
+                else:
+                    story.append(Paragraph(f"Archivo adjunto (tipo: {mime}) — no es imagen, no se puede incrustar en PDF.", value_s))
             else:
-                story.append(Paragraph(f"Archivo adjunto: {os.path.basename(file_path)} (no es imagen, no se puede incrustar en PDF)", value_s))
+                story.append(Paragraph("Archivo adjunto no disponible.", value_s))
         except Exception as e:
             story.append(Paragraph(f"No se pudo cargar el archivo adjunto: {e}", value_s))
 
