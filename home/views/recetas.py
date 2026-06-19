@@ -252,27 +252,40 @@ def receta_pdf(request, id):
     story.append(Paragraph("<b>MEDICAMENTOS PRESCRITOS</b>", head_s))
     story.append(Spacer(1, 0.2*cm))
 
-    med_data = [["#", "Medicamento", "Presentación", "Cantidad", "Posología"]]
+    # Column widths must fit within usable width: LETTER(21.59cm) - 2*2cm margins = ~17.59cm
+    # 0.7 + 4.5 + 3.0 + 1.8 + 7.59 = 17.59cm
+    cell_s = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8, leading=10, wordWrap="LTR")
+    hdr_s  = ParagraphStyle("hdr",  parent=styles["Normal"], fontSize=9, fontName="Helvetica-Bold",
+                            textColor=colors.white, leading=11)
+
+    med_data = [[
+        Paragraph("#", hdr_s),
+        Paragraph("Medicamento", hdr_s),
+        Paragraph("Presentación", hdr_s),
+        Paragraph("Cant.", hdr_s),
+        Paragraph("Posología", hdr_s),
+    ]]
     for idx, it in enumerate(receta.items.all(), 1):
         med_data.append([
-            str(idx),
-            it.medicamento or "—",
-            it.presentacion or "—",
-            str(it.cantidad or "1"),
-            it.posologia or "—",
+            Paragraph(str(idx), cell_s),
+            Paragraph(it.medicamento or "—", cell_s),
+            Paragraph(it.presentacion or "—", cell_s),
+            Paragraph(str(it.cantidad or "1"), cell_s),
+            Paragraph(it.posologia or "—", cell_s),
         ])
-    med_tbl = Table(med_data, colWidths=[0.8*cm, 5.5*cm, 3.5*cm, 2*cm, 6.2*cm])
+    med_tbl = Table(med_data, colWidths=[0.7*cm, 4.5*cm, 3.0*cm, 1.8*cm, 7.59*cm],
+                    repeatRows=1)
     med_tbl.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#556B2F")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, 0), 9),
-        ("FONTSIZE", (0, 1), (-1, -1), 8),
         ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.whitesmoke, colors.white]),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
     ]))
     story.append(med_tbl)
 
