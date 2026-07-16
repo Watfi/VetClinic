@@ -168,7 +168,7 @@
           </div>
 
           <!-- ── Módulos de acceso (solo para rol Administrador, editables solo por SuperAdmin) ──── -->
-          {% if is_superadmin_session or (usuario.Rol == 'Administrador' and is_superadmin_session) %}
+          {% if is_superadmin_session %}
           <div id="modulosSection" style="display:none;">
             <h3 class="text-lg font-bold text-white mb-4 flex items-center border-b border-dark-600 pb-2">
               <i class="fas fa-puzzle-piece text-yellow-500 mr-2"></i>
