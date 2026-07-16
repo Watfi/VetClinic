@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 
 from home.models import TarifaCita
-from ._helpers import admin_required
+from ._helpers import module_required
 
 
 def _ensure_default_tarifas():
@@ -18,7 +18,7 @@ def _ensure_default_tarifas():
         )
 
 
-@admin_required
+@module_required("tarifas")
 def list_tarifas(request):
     _ensure_default_tarifas()
     tarifas = list(TarifaCita.objects.all())
@@ -29,7 +29,7 @@ def list_tarifas(request):
     })
 
 
-@admin_required
+@module_required("tarifas")
 def add_tarifa(request):
     if request.method == "POST":
         tipo = request.POST.get("tipo", "").strip()
@@ -57,7 +57,7 @@ def add_tarifa(request):
     return redirect("list_tarifas")
 
 
-@admin_required
+@module_required("tarifas")
 def edit_tarifa(request, id):
     t = TarifaCita.objects.filter(pk=id).first()
     if not t:
@@ -81,7 +81,7 @@ def edit_tarifa(request, id):
     return redirect("list_tarifas")
 
 
-@admin_required
+@module_required("tarifas")
 def delete_tarifa(request, id):
     t = TarifaCita.objects.filter(pk=id).first()
     if t:

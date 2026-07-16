@@ -12,7 +12,7 @@ from django.shortcuts import redirect, render
 
 from home.models import Usuario
 
-from ._helpers import admin_required
+from ._helpers import admin_required, module_required
 
 
 _ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
@@ -50,7 +50,7 @@ def _decode_picture(request):
     return f"data:{pic.content_type};base64,{encoded}", None
 
 
-@admin_required
+@module_required("veterinarios")
 def list_veterinarios(request):
     from django.db.models import Q
     data = [_to_legacy(v) for v in Usuario.objects.filter(
@@ -64,7 +64,7 @@ def list_veterinarios(request):
 
 
 
-@admin_required
+@module_required("veterinarios")
 def add_veterinario(request):
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
@@ -123,7 +123,7 @@ def add_veterinario(request):
     })
 
 
-@admin_required
+@module_required("veterinarios")
 def edit_veterinario(request, id):
     from django.db.models import Q
     vet = Usuario.objects.filter(
@@ -199,7 +199,7 @@ def edit_veterinario(request, id):
     })
 
 
-@admin_required
+@module_required("veterinarios")
 def delete_veterinario(request, id):
     from django.db.models import Q
     vet = Usuario.objects.filter(

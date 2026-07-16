@@ -23,10 +23,10 @@ except ImportError:
 
 from home.models import Categoria, HistorialPrecio, MovimientoInventario, Producto, Usuario
 
-from ._helpers import admin_required
+from ._helpers import module_required
 
 
-@admin_required
+@module_required("categorias")
 def list_categorias(request):
     categorias = Categoria.objects.all()
     return render(request, "categorias_list.html", {
@@ -36,7 +36,7 @@ def list_categorias(request):
     })
 
 
-@admin_required
+@module_required("categorias")
 def add_categoria(request):
     if request.method == "POST":
         nombre = (request.POST.get("nombre") or "").strip()
@@ -59,7 +59,7 @@ def add_categoria(request):
     })
 
 
-@admin_required
+@module_required("categorias")
 def edit_categoria(request, id):
     categoria = get_object_or_404(Categoria, pk=int(id))
     if request.method == "POST":
@@ -75,7 +75,7 @@ def edit_categoria(request, id):
     })
 
 
-@admin_required
+@module_required("categorias")
 def delete_categoria(request, id):
     categoria = get_object_or_404(Categoria, pk=int(id))
     categoria.delete()
@@ -83,7 +83,7 @@ def delete_categoria(request, id):
     return redirect("list_categorias")
 
 
-@admin_required
+@module_required("inventario")
 def list_productos(request):
     productos = Producto.objects.select_related("categoria").all()
     q = (request.GET.get("q") or "").strip()
@@ -111,7 +111,7 @@ def _parse_int(value, default=0):
         return default
 
 
-@admin_required
+@module_required("inventario")
 def add_producto(request):
     categorias = Categoria.objects.all()
     if request.method == "POST":
@@ -145,7 +145,7 @@ def add_producto(request):
     })
 
 
-@admin_required
+@module_required("inventario")
 def edit_producto(request, id):
     producto = get_object_or_404(Producto, pk=int(id))
     categorias = Categoria.objects.all()
@@ -187,7 +187,7 @@ def edit_producto(request, id):
     })
 
 
-@admin_required
+@module_required("inventario")
 def delete_producto(request, id):
     producto = get_object_or_404(Producto, pk=int(id))
     producto.delete()
@@ -197,7 +197,7 @@ def delete_producto(request, id):
 
 # ── Movimientos de inventario ──────────────────────────────────────────────
 
-@admin_required
+@module_required("inventario")
 def list_movimientos(request, producto_id):
     producto = get_object_or_404(Producto, pk=int(producto_id))
     movimientos = producto.movimientos.select_related("usuario").all()
@@ -209,7 +209,7 @@ def list_movimientos(request, producto_id):
     })
 
 
-@admin_required
+@module_required("inventario")
 def add_entrada(request, producto_id):
     import base64 as _b64
     producto = get_object_or_404(Producto, pk=int(producto_id))
@@ -261,7 +261,7 @@ def add_entrada(request, producto_id):
     })
 
 
-@admin_required
+@module_required("inventario")
 def add_salida(request, producto_id):
     producto = get_object_or_404(Producto, pk=int(producto_id))
     if request.method == "POST":
@@ -296,7 +296,7 @@ def add_salida(request, producto_id):
     })
 
 
-@admin_required
+@module_required("inventario")
 def toggle_descuento(request, producto_id):
     """AJAX POST — toggle discount on/off and set percentage without changing base price."""
     if request.method != "POST":
@@ -334,7 +334,7 @@ def toggle_descuento(request, producto_id):
     })
 
 
-@admin_required
+@module_required("inventario")
 def entrada_pdf(request, mov_id):
     """PDF de comprobante de entrada de inventario con encabezado Kane Agropet."""
     mov = get_object_or_404(
@@ -481,7 +481,7 @@ def entrada_pdf(request, mov_id):
     return resp
 
 
-@admin_required
+@module_required("inventario")
 def historial_precios_pdf(request, producto_id):
     """PDF con historial completo de precios de un producto."""
     producto = get_object_or_404(Producto, pk=int(producto_id))

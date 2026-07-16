@@ -16,7 +16,7 @@ from openpyxl.utils import get_column_letter
 
 from home.models import Cita, HistoriaClinica, Paciente, Peluqueria, Producto, Usuario, Venta, VentaItem
 
-from ._helpers import admin_required, vet_or_admin_required
+from ._helpers import admin_required, vet_or_admin_required, module_required
 
 
 @vet_or_admin_required
@@ -153,7 +153,7 @@ def _excel_response(rows, headers, sheet_name, filename):
     return resp
 
 
-@vet_or_admin_required
+@module_required("reportes")
 def reports(request):
     # Default to new tabbed UI; legacy type= still supported for excel backwards-compat.
     report_type = request.GET.get("type", "")

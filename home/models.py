@@ -31,13 +31,30 @@ class Propietario(models.Model):
 
 
 class Usuario(models.Model):
+    ROL_SUPERADMIN = "SuperAdministrador"
     ROL_ADMIN = "Administrador"
     ROL_VET = "Veterinario"
     ROL_PELUQUERO = "Peluquero"
     ROL_CHOICES = [
+        (ROL_SUPERADMIN, "SuperAdministrador"),
         (ROL_ADMIN, "Administrador"),
         (ROL_VET, "Veterinario"),
         (ROL_PELUQUERO, "Peluquero"),
+    ]
+
+    # All configurable module keys for Admin role
+    MODULO_TARIFAS = "tarifas"
+    MODULO_INVENTARIO = "inventario"
+    MODULO_CATEGORIAS = "categorias"
+    MODULO_VENTAS = "ventas"
+    MODULO_REPORTES = "reportes"
+    MODULO_VETERINARIOS = "veterinarios"
+    MODULO_USUARIOS = "usuarios"
+    MODULO_CITAS = "citas"
+    TODOS_MODULOS = [
+        MODULO_TARIFAS, MODULO_INVENTARIO, MODULO_CATEGORIAS,
+        MODULO_VENTAS, MODULO_REPORTES, MODULO_VETERINARIOS,
+        MODULO_USUARIOS, MODULO_CITAS,
     ]
 
     user = models.CharField(max_length=80, unique=True, db_column="User")
@@ -55,8 +72,13 @@ class Usuario(models.Model):
     ofrece_consulta_medica = models.BooleanField(default=True)
     ofrece_peluqueria = models.BooleanField(default=False)
 
+    # Configurable modules for Admin role (list of module keys)
+    # SuperAdmin and Vet: ignored (full access to their scope)
+    modulos_acceso = models.JSONField(default=list, blank=True)
+
     def __str__(self):
         return f"{self.user} ({self.rol})"
+
 
 
 class Paciente(models.Model):

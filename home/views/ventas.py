@@ -24,7 +24,7 @@ from reportlab.platypus import (
 
 from home.models import Producto, Usuario, Venta, VentaItem
 
-from ._helpers import admin_required, current_user
+from ._helpers import module_required, current_user
 
 
 def _D(x, default=Decimal("0")):
@@ -40,7 +40,7 @@ def _next_numero():
     return f"F-{datetime.now().strftime('%Y%m%d')}-{n:05d}"
 
 
-@admin_required
+@module_required("ventas")
 def list_ventas(request):
     ventas = Venta.objects.select_related("cliente").prefetch_related("items").all()
     return render(request, "ventas_list.html", {
@@ -50,7 +50,7 @@ def list_ventas(request):
     })
 
 
-@admin_required
+@module_required("ventas")
 def add_venta(request):
     productos = Producto.objects.filter(activo=True, stock__gt=0)
     clientes = Usuario.objects.all()
@@ -154,7 +154,7 @@ def add_venta(request):
     })
 
 
-@admin_required
+@module_required("ventas")
 def view_venta(request, id):
     venta = get_object_or_404(Venta.objects.prefetch_related("items"), pk=int(id))
     return render(request, "ventas_detail.html", {
@@ -164,7 +164,7 @@ def view_venta(request, id):
     })
 
 
-@admin_required
+@module_required("ventas")
 def cancel_venta(request, id):
     venta = get_object_or_404(Venta, pk=int(id))
     if venta.estado == "Anulada":
@@ -181,7 +181,7 @@ def cancel_venta(request, id):
     return redirect("view_venta", id=venta.id)
 
 
-@admin_required
+@module_required("ventas")
 def edit_venta(request, id):
     venta = get_object_or_404(Venta.objects.prefetch_related("items"), pk=int(id))
     if request.method == "POST":
@@ -200,7 +200,7 @@ def edit_venta(request, id):
     })
 
 
-@admin_required
+@module_required("ventas")
 def delete_venta(request, id):
     venta = get_object_or_404(Venta, pk=int(id))
     if request.method == "POST":
@@ -216,7 +216,7 @@ def delete_venta(request, id):
     return redirect("list_ventas")
 
 
-@admin_required
+@module_required("ventas")
 def invoice_pdf(request, id):
     venta = get_object_or_404(Venta.objects.prefetch_related("items"), pk=int(id))
     pdf_bytes = _build_invoice_pdf(venta)
@@ -225,7 +225,7 @@ def invoice_pdf(request, id):
     return resp
 
 
-@admin_required
+@module_required("ventas")
 def resend_invoice(request, id):
     venta = get_object_or_404(Venta.objects.prefetch_related("items"), pk=int(id))
     if not venta.cliente_email:
@@ -393,7 +393,7 @@ def _send_invoice_email(venta, to=None, cc=None, subject=None, mensaje=None):
 
 # --- Public API: send invoice email -----------------------------------------
 
-@admin_required
+@module_required("ventas")
 def send_invoice_email(request, id):
     """POST endpoint with optional `to`, `cc`, `subject`, `mensaje` from a modal."""
     venta = get_object_or_404(Venta.objects.prefetch_related("items"), pk=int(id))

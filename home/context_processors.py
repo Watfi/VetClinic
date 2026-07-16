@@ -1,9 +1,24 @@
 from django.conf import settings
+from home.models import Usuario
+
 
 def user_context(request):
+    rol = request.session.get("rol")
+    username = request.session.get("user")
+
+    # Compute modulos_acceso for sidebar and template checks
+    modulos_acceso = []
+    if rol == Usuario.ROL_SUPERADMIN:
+        modulos_acceso = Usuario.TODOS_MODULOS  # full access
+    elif rol == Usuario.ROL_ADMIN and username:
+        usuario = Usuario.objects.filter(user=username).first()
+        modulos_acceso = list(usuario.modulos_acceso or []) if usuario else []
+
     return {
-        "username": request.session.get("user"),
-        "rol": request.session.get("rol"),
+        "username": username,
+        "rol": rol,
+        "modulos_acceso": modulos_acceso,
+        "is_superadmin": rol == Usuario.ROL_SUPERADMIN,
         "business": {
             "name": getattr(settings, "BUSINESS_NAME", "PetCare"),
             "nit": getattr(settings, "BUSINESS_NIT", "900123456-7"),

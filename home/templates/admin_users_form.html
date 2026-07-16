@@ -126,21 +126,25 @@
               </div>
               {% endif %}
 
-              <!-- Role -->
               <div class="group">
                 <label class="block text-gray-300 mb-2 font-medium">
                   <i class="fas fa-user-tag text-olive-500 mr-2"></i>
                   Role *
                 </label>
+                {% if is_superadmin_session or action == 'Add' %}
                 <select name="rol"
+                        id="rolSelect"
                         required
                         class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
                                focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
                                transition-all duration-300 group-hover:border-olive-700"
-                        onchange="updatePreview()">
+                        onchange="updatePreview(); toggleModulosSection()">
                   <option value="">-- Select Role --</option>
+                  <option value="SuperAdministrador" {% if usuario.Rol == "SuperAdministrador" %}selected{% endif %}>
+                    ⭐ SuperAdministrador
+                  </option>
                   <option value="Administrador" {% if usuario.Rol == "Administrador" %}selected{% endif %}>
-                    👑 Administrator
+                    👑 Administrador
                   </option>
                   <option value="Veterinario" {% if usuario.Rol == "Veterinario" %}selected{% endif %}>
                     👨‍⚕️ Veterinarian
@@ -149,6 +153,12 @@
                     ✂️ Peluquero
                   </option>
                 </select>
+                {% else %}
+                <div class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-gray-400">
+                  {{ usuario.Rol }}
+                </div>
+                <input type="hidden" name="rol" value="{{ usuario.Rol }}">
+                {% endif %}
                 <p class="text-xs text-gray-500 mt-1 flex items-center">
                   <i class="fas fa-info-circle mr-1"></i>
                   Defines user permissions and access level
@@ -156,6 +166,40 @@
               </div>
             </div>
           </div>
+
+          <!-- ── Módulos de acceso (solo para rol Administrador, editables solo por SuperAdmin) ──── -->
+          {% if is_superadmin_session or (usuario.Rol == 'Administrador' and is_superadmin_session) %}
+          <div id="modulosSection" style="display:none;">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center border-b border-dark-600 pb-2">
+              <i class="fas fa-puzzle-piece text-yellow-500 mr-2"></i>
+              Módulos de acceso
+              <span class="ml-2 text-xs text-gray-500 font-normal">(solo para rol Administrador)</span>
+            </h3>
+            <div class="bg-dark-900 border border-yellow-700/40 rounded-lg p-4">
+              <p class="text-xs text-yellow-300 mb-4 flex items-start">
+                <i class="fas fa-info-circle mr-2 mt-0.5"></i>
+                Selecciona qué módulos del sistema podrá ver y usar este administrador. Sin módulos seleccionados, solo verá el panel principal.
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {% for key, label in modulos_labels %}
+                <label class="flex items-center space-x-3 cursor-pointer group bg-dark-800 hover:bg-dark-700 rounded-lg px-3 py-2.5 border border-dark-600 hover:border-yellow-700/60 transition-all">
+                  <input type="checkbox"
+                         name="modulos_acceso"
+                         value="{{ key }}"
+                         {% if key in usuario.modulos_acceso %}checked{% endif %}
+                         class="w-4 h-4 text-yellow-600 bg-dark-900 border-dark-500 rounded focus:ring-yellow-500">
+                  <span class="text-sm text-gray-300 group-hover:text-white transition-colors">{{ label }}</span>
+                </label>
+                {% endfor %}
+              </div>
+              <div class="mt-3 flex gap-2">
+                <button type="button" onclick="selectAllModulos()" class="text-xs text-yellow-400 hover:text-yellow-300 underline">Seleccionar todos</button>
+                <span class="text-gray-600">·</span>
+                <button type="button" onclick="clearAllModulos()" class="text-xs text-gray-400 hover:text-gray-300 underline">Ninguno</button>
+              </div>
+            </div>
+          </div>
+          {% endif %}
 
           <!-- Professional / Clinical Details Section -->
           <div>
@@ -319,16 +363,20 @@
             </h3>
             <div class="space-y-2 text-xs text-gray-400">
               <div class="flex items-start space-x-2">
+                <i class="fas fa-star text-yellow-500 mt-0.5"></i>
+                <p><strong class="text-yellow-400">SuperAdministrador:</strong> Acceso total al sistema, puede crear/eliminar usuarios y asignar módulos</p>
+              </div>
+              <div class="flex items-start space-x-2">
                 <i class="fas fa-crown text-orange-500 mt-0.5"></i>
-                <p><strong class="text-orange-400">Administrator:</strong> Full system access, can manage all users and settings</p>
+                <p><strong class="text-orange-400">Administrador:</strong> Acceso solo a los módulos no médicos que el SuperAdmin le asigne</p>
               </div>
               <div class="flex items-start space-x-2">
                 <i class="fas fa-user-md text-purple-500 mt-0.5"></i>
-                <p><strong class="text-purple-400">Veterinarian:</strong> Can view all pets, manage appointments, and access reports</p>
+                <p><strong class="text-purple-400">Veterinario:</strong> Pacientes, citas, historia clínica y recetario</p>
               </div>
               <div class="flex items-start space-x-2">
-                <i class="fas fa-user text-olive-500 mt-0.5"></i>
-                <p><strong class="text-olive-400">Client:</strong> Can manage own pets and schedule appointments</p>
+                <i class="fas fa-cut text-olive-500 mt-0.5"></i>
+                <p><strong class="text-olive-400">Peluquero:</strong> Solo citas de peluquería</p>
               </div>
             </div>
           </div>
@@ -461,7 +509,8 @@
     const email = document.querySelector('input[name="email"]').value;
     const phone = document.querySelector('input[name="phone"]').value;
     const address = document.querySelector('input[name="address"]').value;
-    const role = document.querySelector('select[name="rol"]').value;
+    const roleEl = document.querySelector('select[name="rol"]');
+    const role = roleEl ? roleEl.value : '';
     
     // Avatar
     document.getElementById('previewAvatar').textContent = username ? username.charAt(0).toUpperCase() : 'U';
@@ -498,9 +547,13 @@
     let roleText = 'Role';
     let roleClass = 'bg-olive-700/30 text-olive-400 border-olive-700';
     
-    if (role === 'Administrador') {
+    if (role === 'SuperAdministrador') {
+      roleIcon = 'fa-star';
+      roleText = 'SuperAdministrador';
+      roleClass = 'bg-yellow-700/30 text-yellow-400 border-yellow-700';
+    } else if (role === 'Administrador') {
       roleIcon = 'fa-user-shield';
-      roleText = 'Administrator';
+      roleText = 'Administrador';
       roleClass = 'bg-orange-700/30 text-orange-400 border-orange-700';
     } else if (role === 'Veterinario') {
       roleIcon = 'fa-user-md';
@@ -517,13 +570,30 @@
     
     // Avatar color
     const avatar = document.getElementById('previewAvatar');
-    if (role === 'Administrador') {
+    if (role === 'SuperAdministrador') {
+      avatar.className = 'w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-yellow-700 to-yellow-600 flex items-center justify-center text-white text-2xl font-bold';
+    } else if (role === 'Administrador') {
       avatar.className = 'w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-orange-700 to-orange-600 flex items-center justify-center text-white text-2xl font-bold';
     } else if (role === 'Veterinario') {
       avatar.className = 'w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-purple-700 to-purple-600 flex items-center justify-center text-white text-2xl font-bold';
     } else {
       avatar.className = 'w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-olive-700 to-olive-600 flex items-center justify-center text-white text-2xl font-bold';
     }
+  }
+
+  function toggleModulosSection() {
+    const rol = document.getElementById('rolSelect');
+    const sec = document.getElementById('modulosSection');
+    if (!sec) return;
+    sec.style.display = (rol && rol.value === 'Administrador') ? 'block' : 'none';
+  }
+
+  function selectAllModulos() {
+    document.querySelectorAll('input[name="modulos_acceso"]').forEach(cb => cb.checked = true);
+  }
+
+  function clearAllModulos() {
+    document.querySelectorAll('input[name="modulos_acceso"]').forEach(cb => cb.checked = false);
   }
 
   // Validación de teléfono en tiempo real
@@ -549,6 +619,8 @@
 
     // Inicializar preview
     updatePreview();
+    // Inicializar visibilidad de módulos
+    toggleModulosSection();
 
     // Animación de entrada
     const form = document.getElementById('userForm');
