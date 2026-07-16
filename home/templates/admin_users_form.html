@@ -157,6 +157,100 @@
             </div>
           </div>
 
+          <!-- Professional / Clinical Details Section -->
+          <div>
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center border-b border-dark-600 pb-2">
+              <i class="fas fa-user-md text-olive-500 mr-2"></i>
+              Professional / Clinical Details
+            </h3>
+            
+            <div class="space-y-4">
+              <!-- Nombre Completo -->
+              <div class="group">
+                <label class="block text-gray-300 mb-2 font-medium">
+                  <i class="fas fa-id-card text-olive-500 mr-2"></i>
+                  Full Name
+                </label>
+                <input type="text" 
+                       name="nombre" 
+                       value="{{ usuario.nombre|default:'' }}" 
+                       placeholder="e.g., Dr. John Doe"
+                       class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                              focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                              transition-all duration-300 group-hover:border-olive-700">
+              </div>
+
+              <!-- Especialidad -->
+              <div class="group">
+                <label class="block text-gray-300 mb-2 font-medium">
+                  <i class="fas fa-graduation-cap text-olive-500 mr-2"></i>
+                  Specialty
+                </label>
+                <input type="text" 
+                       name="especialidad" 
+                       value="{{ usuario.especialidad|default:'' }}" 
+                       placeholder="e.g., General Medicine, Surgery, Groomer"
+                       class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                              focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                              transition-all duration-300 group-hover:border-olive-700">
+              </div>
+
+              <!-- Professional License -->
+              <div class="group">
+                <label class="block text-gray-300 mb-2 font-medium">
+                  <i class="fas fa-file-medical text-olive-500 mr-2"></i>
+                  Professional License
+                </label>
+                <input type="text" 
+                       name="license" 
+                       value="{{ usuario.license|default:'' }}" 
+                       placeholder="e.g., TP-12345"
+                       class="w-full bg-dark-900 border border-dark-600 rounded-lg px-4 py-3 text-white
+                              focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-transparent
+                              transition-all duration-300 group-hover:border-olive-700">
+              </div>
+
+              <!-- Clinical Services Checkboxes -->
+              <div class="bg-dark-900 border border-dark-600 rounded-lg p-4 space-y-3">
+                <label class="block text-gray-400 text-xs font-semibold uppercase tracking-wider">
+                  Clinical & Professional Services
+                </label>
+                
+                <div class="flex flex-col sm:flex-row gap-4">
+                  <!-- Ofrece Consulta Médica -->
+                  <label class="flex items-center space-x-3 cursor-pointer group">
+                    <input type="checkbox" 
+                           name="ofrece_consulta_medica" 
+                           value="on"
+                           {% if usuario.ofrece_consulta_medica or action == 'Add' %}checked{% endif %}
+                           class="w-5 h-5 text-olive-600 bg-dark-900 border-dark-600 rounded 
+                                  focus:ring-olive-500 focus:ring-2 focus:ring-offset-dark-800">
+                    <span class="text-sm text-gray-300 group-hover:text-white transition-colors">
+                      🩺 Offers Medical Consultations
+                    </span>
+                  </label>
+
+                  <!-- Ofrece Peluquería -->
+                  <label class="flex items-center space-x-3 cursor-pointer group">
+                    <input type="checkbox" 
+                           name="ofrece_peluqueria" 
+                           value="on"
+                           {% if usuario.ofrece_peluqueria %}checked{% endif %}
+                           class="w-5 h-5 text-olive-600 bg-dark-900 border-dark-600 rounded 
+                                  focus:ring-olive-500 focus:ring-2 focus:ring-offset-dark-800">
+                    <span class="text-sm text-gray-300 group-hover:text-white transition-colors">
+                      ✂️ Offers Grooming (Peluquería)
+                    </span>
+                  </label>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                  <i class="fas fa-info-circle mr-1"></i>
+                  Users with these services checked will appear in the Veterinarians module and appointment dropdowns.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <!-- Contact Information Section -->
           <div>
             <h3 class="text-lg font-bold text-white mb-4 flex items-center border-b border-dark-600 pb-2">

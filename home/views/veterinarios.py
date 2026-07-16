@@ -52,12 +52,16 @@ def _decode_picture(request):
 
 @admin_required
 def list_veterinarios(request):
-    data = [_to_legacy(v) for v in Usuario.objects.filter(rol=Usuario.ROL_VET)]
+    from django.db.models import Q
+    data = [_to_legacy(v) for v in Usuario.objects.filter(
+        Q(rol=Usuario.ROL_VET) | Q(ofrece_consulta_medica=True) | Q(ofrece_peluqueria=True)
+    ).distinct()]
     return render(request, "vets_list.html", {
         "vets": data,
         "rol": request.session.get("rol"),
         "username": request.session.get("user"),
     })
+
 
 
 @admin_required
@@ -121,7 +125,10 @@ def add_veterinario(request):
 
 @admin_required
 def edit_veterinario(request, id):
-    vet = Usuario.objects.filter(pk=id, rol=Usuario.ROL_VET).first()
+    from django.db.models import Q
+    vet = Usuario.objects.filter(
+        Q(pk=id) & (Q(rol=Usuario.ROL_VET) | Q(ofrece_consulta_medica=True) | Q(ofrece_peluqueria=True))
+    ).first()
     if not vet:
         messages.error(request, "Veterinarian not found.")
         return redirect("list_veterinarios")
@@ -194,11 +201,15 @@ def edit_veterinario(request, id):
 
 @admin_required
 def delete_veterinario(request, id):
-    vet = Usuario.objects.filter(pk=id, rol=Usuario.ROL_VET).first()
+    from django.db.models import Q
+    vet = Usuario.objects.filter(
+        Q(pk=id) & (Q(rol=Usuario.ROL_VET) | Q(ofrece_consulta_medica=True) | Q(ofrece_peluqueria=True))
+    ).first()
     if not vet:
         messages.error(request, "Veterinarian not found.")
         return redirect("list_veterinarios")
     nombre = vet.nombre or vet.user
     vet.delete()
     messages.info(request, f"Dr. {nombre} has been deleted.")
+
     return redirect("list_veterinarios")

@@ -19,7 +19,12 @@ def _usuario_to_legacy(u):
         "Address": u.address,
         "Rol": u.rol,
         "nombre": u.nombre,
+        "especialidad": u.especialidad,
+        "license": u.license,
+        "ofrece_consulta_medica": u.ofrece_consulta_medica,
+        "ofrece_peluqueria": u.ofrece_peluqueria,
     }
+
 
 
 @admin_required
@@ -46,6 +51,13 @@ def admin_users_add(request):
         address = request.POST.get("address", "")
         rol = request.POST.get("rol") or Usuario.ROL_VET
 
+        # Professional / Clinical fields
+        nombre = (request.POST.get("nombre") or "").strip()
+        especialidad = (request.POST.get("especialidad") or "").strip()
+        license = (request.POST.get("license") or "").strip()
+        ofrece_consulta_medica = request.POST.get("ofrece_consulta_medica") == "on"
+        ofrece_peluqueria = request.POST.get("ofrece_peluqueria") == "on"
+
         if not all([user_field, email, password]):
             messages.error(request, "Username, email and password are required.")
             return redirect("admin_users_add")
@@ -59,6 +71,9 @@ def admin_users_add(request):
         Usuario.objects.create(
             user=user_field, email=email, password=password,
             phone=phone, address=address, rol=rol,
+            nombre=nombre, especialidad=especialidad, license=license,
+            ofrece_consulta_medica=ofrece_consulta_medica,
+            ofrece_peluqueria=ofrece_peluqueria,
         )
         messages.success(request, f"User '{user_field}' created successfully.")
         return redirect("admin_users_list")
@@ -80,6 +95,13 @@ def admin_users_edit(request, id):
         address = request.POST.get("address", "")
         rol = request.POST.get("rol") or usuario.rol
 
+        # Professional / Clinical fields
+        nombre = (request.POST.get("nombre") or "").strip()
+        especialidad = (request.POST.get("especialidad") or "").strip()
+        license = (request.POST.get("license") or "").strip()
+        ofrece_consulta_medica = request.POST.get("ofrece_consulta_medica") == "on"
+        ofrece_peluqueria = request.POST.get("ofrece_peluqueria") == "on"
+
         if Usuario.objects.filter(user=user_field).exclude(pk=usuario.pk).exists():
             messages.error(request, "Another user already has that username.")
             return render(request, "admin_users_form.html", {
@@ -96,9 +118,15 @@ def admin_users_edit(request, id):
         usuario.phone = phone
         usuario.address = address
         usuario.rol = rol
+        usuario.nombre = nombre
+        usuario.especialidad = especialidad
+        usuario.license = license
+        usuario.ofrece_consulta_medica = ofrece_consulta_medica
+        usuario.ofrece_peluqueria = ofrece_peluqueria
         usuario.save()
         messages.success(request, "User updated successfully.")
         return redirect("admin_users_list")
+
 
     return render(request, "admin_users_form.html", {
         "usuario": _usuario_to_legacy(usuario), "action": "Edit",
