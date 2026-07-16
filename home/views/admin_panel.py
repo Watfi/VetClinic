@@ -51,8 +51,8 @@ def admin_users_list(request):
         "usuarios": usuarios,
         "total_usuarios": len(usuarios),
         "total_superadmins": sum(1 for u in usuarios if u["Rol"] == Usuario.ROL_SUPERADMIN),
-        "total_admins": sum(1 for u in usuarios if u["Rol"] == Usuario.ROL_ADMIN),
-        "total_vets": sum(1 for u in usuarios if u["Rol"] == Usuario.ROL_VET),
+        "total_admins": sum(1 for u in usuarios if u["Rol"] in (Usuario.ROL_ADMIN, Usuario.ROL_SUPERADMIN)),
+        "total_vets": sum(1 for u in usuarios if u["Rol"] == Usuario.ROL_VET or u["ofrece_consulta_medica"] or u["ofrece_peluqueria"]),
         "total_clients": sum(1 for u in usuarios if u["Rol"] == Usuario.ROL_PELUQUERO),
     })
 

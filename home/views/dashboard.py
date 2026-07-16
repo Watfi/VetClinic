@@ -24,10 +24,13 @@ def index(request):
     today = timezone.localdate()
     week_start = today - timedelta(days=today.weekday())
 
+    from django.db.models import Q
     total_users = Usuario.objects.count()
     total_clientes = Usuario.objects.filter(rol=Usuario.ROL_PELUQUERO).count()
-    total_veterinarios = Usuario.objects.filter(rol=Usuario.ROL_VET).count()
-    total_admins = Usuario.objects.filter(rol=Usuario.ROL_ADMIN).count()
+    total_veterinarios = Usuario.objects.filter(
+        Q(rol=Usuario.ROL_VET) | Q(ofrece_consulta_medica=True) | Q(ofrece_peluqueria=True)
+    ).distinct().count()
+    total_admins = Usuario.objects.filter(rol__in=[Usuario.ROL_ADMIN, Usuario.ROL_SUPERADMIN]).count()
 
     total_mascotas = Paciente.objects.count()
     especies_counter = Counter(
