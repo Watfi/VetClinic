@@ -109,8 +109,8 @@ EMAIL_HOST         = 'smtp.gmail.com'
 EMAIL_PORT         = 587
 EMAIL_USE_TLS      = True
 EMAIL_USE_SSL      = False
-EMAIL_HOST_USER    = 'santiagotabina@gmail.com'
-EMAIL_HOST_PASSWORD = 'cfbf lwsl xuje mocl'   # ← 16 caracteres sin espacios
+EMAIL_HOST_USER    = os.environ.get('EMAIL_HOST_USER', 'santiagotabina@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'cfbflwslxujemocl')
 DEFAULT_FROM_EMAIL = 'Kane Agropet <kane.agropet@gmail.com>'
 
 # ──────────────────────────────────────────────
