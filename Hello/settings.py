@@ -110,7 +110,7 @@ EMAIL_PORT         = 587
 EMAIL_USE_TLS      = True
 EMAIL_USE_SSL      = False
 EMAIL_HOST_USER    = os.environ.get('EMAIL_HOST_USER', 'santiagotabina@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'cfbflwslxujemocl')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'lmyifpzbggfyonfl')
 DEFAULT_FROM_EMAIL = 'Kane Agropet <kane.agropet@gmail.com>'
 
 # ──────────────────────────────────────────────
