@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+  
+  <!-- Breadcrumb -->
+  <div class="flex items-center space-x-2 text-sm text-gray-400">
+    <a href="{% url 'list_productos' %}" class="hover:text-olive-400 transition-colors">
+      <i class="fas fa-boxes mr-1"></i>Inventario
+    </a>
+    <i class="fas fa-chevron-right text-xs"></i>
+    <span class="text-white">Importar productos</span>
+  </div>
+
+  <h1 class="text-3xl font-bold text-white flex items-center">
+    <i class="fas fa-file-import text-olive-500 mr-3"></i>
+    Importar productos desde Excel
+  </h1>
+
+  {% if messages %}{% for m in messages %}
+    <div class="p-4 rounded-lg mb-4 {% if m.tags == 'error' %}bg-red-900/30 border border-red-700 text-red-300{% else %}bg-green-900/30 border border-green-700 text-green-300{% endif %}">
+      {{ m }}
+    </div>
+  {% endfor %}{% endif %}
+
+  <div class="bg-dark-800 border border-dark-700 rounded-xl p-8 shadow-xl space-y-6">
+    <div>
+      <h3 class="text-lg font-bold text-white mb-2 flex items-center">
+        <i class="fas fa-info-circle text-olive-500 mr-2"></i>
+        Instrucciones para la importación
+      </h3>
+      <p class="text-gray-300 text-sm leading-relaxed">
+        El archivo de Excel debe contener una hoja de cálculo con las siguientes columnas en la primera fila (encabezado):
+      </p>
+      
+      <div class="mt-4 bg-dark-900 border border-dark-700 rounded-lg p-4">
+        <table class="w-full text-xs text-left text-gray-300">
+          <thead>
+            <tr class="text-olive-400 border-b border-dark-700">
+              <th class="pb-2 font-bold">Columna</th>
+              <th class="pb-2 font-bold">Nombre</th>
+              <th class="pb-2 font-bold">Requerido</th>
+              <th class="pb-2 font-bold">Ejemplo / Formato</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-dark-700/50">
+            <tr>
+              <td class="py-2 font-mono">A (1)</td>
+              <td class="py-2">SKU</td>
+              <td class="py-2 text-red-400 font-semibold">Sí (Único)</td>
+              <td class="py-2">PROD-00123</td>
+            </tr>
+            <tr>
+              <td class="py-2 font-mono">B (2)</td>
+              <td class="py-2">Nombre</td>
+              <td class="py-2 text-red-400 font-semibold">Sí</td>
+              <td class="py-2">Concentrado Perro Adulto 10Kg</td>
+            </tr>
+            <tr>
+              <td class="py-2 font-mono">C (3)</td>
+              <td class="py-2">Categoría</td>
+              <td class="py-2 text-gray-500">No</td>
+              <td class="py-2">Alimentos</td>
+            </tr>
+            <tr>
+              <td class="py-2 font-mono">D (4)</td>
+              <td class="py-2">Precio Compra</td>
+              <td class="py-2 text-gray-500">No (Def: 0)</td>
+              <td class="py-2">15000</td>
+            </tr>
+            <tr>
+              <td class="py-2 font-mono">E (5)</td>
+              <td class="py-2">Precio Venta</td>
+              <td class="py-2 text-gray-500">No (Def: 0)</td>
+              <td class="py-2">22000</td>
+            </tr>
+            <tr>
+              <td class="py-2 font-mono">F (6)</td>
+              <td class="py-2">Stock</td>
+              <td class="py-2 text-gray-500">No (Def: 0)</td>
+              <td class="py-2">50</td>
+            </tr>
+            <tr>
+              <td class="py-2 font-mono">G (7)</td>
+              <td class="py-2">Stock Mínimo</td>
+              <td class="py-2 text-gray-500">No (Def: 0)</td>
+              <td class="py-2">5</td>
+            </tr>
+            <tr>
+              <td class="py-2 font-mono">H (8)</td>
+              <td class="py-2">Descripción</td>
+              <td class="py-2 text-gray-500">No</td>
+              <td class="py-2">Alimento premium de alta calidad para canes...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-4 bg-yellow-900/20 border border-yellow-700/40 rounded-lg p-3 text-xs text-yellow-300 flex items-start space-x-2">
+        <i class="fas fa-exclamation-triangle mt-0.5"></i>
+        <span>
+          <strong>Nota:</strong> Si el <strong>SKU</strong> ya existe en el sistema, los datos de ese producto se <strong>actualizarán</strong> con los valores del Excel. Si el SKU no existe, se creará un producto nuevo.
+        </span>
+      </div>
+    </div>
+
+    <!-- Formulario de subida -->
+    <form method="post" enctype="multipart/form-data" class="space-y-6 pt-4 border-t border-dark-700">
+      {% csrf_token %}
+      <div class="group">
+        <label class="block text-sm text-gray-300 mb-2 font-medium">Selecciona tu archivo Excel (.xlsx / .xls) *</label>
+        <div class="relative flex items-center justify-center border-2 border-dashed border-dark-600 group-hover:border-olive-600 rounded-lg p-6 bg-dark-900 transition-all cursor-pointer">
+          <input type="file" name="archivo" required accept=".xlsx, .xls"
+                 class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                 id="excelInput" onchange="updateFileName(this)">
+          <div class="text-center space-y-2">
+            <i class="fas fa-cloud-upload-alt text-olive-500 text-3xl" id="uploadIcon"></i>
+            <p class="text-gray-300 text-sm" id="fileName">Arrastra aquí tu archivo o haz clic para buscarlo</p>
+            <p class="text-gray-500 text-xs">Soportado: archivos Microsoft Excel (.xlsx)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3">
+        <a href="{% url 'list_productos' %}" class="px-6 py-3 rounded-lg bg-dark-900 hover:bg-dark-700 border border-dark-600 text-gray-300 hover:text-white transition-all text-sm font-semibold">
+          Cancelar
+        </a>
+        <button type="submit" class="px-6 py-3 rounded-lg bg-gradient-to-r from-olive-700 to-olive-600 hover:from-olive-600 hover:to-olive-500 text-white font-semibold shadow-lg hover:shadow-olive-500/30 transition-all text-sm">
+          <i class="fas fa-file-import mr-1"></i>Importar Inventario
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function updateFileName(input) {
+    const label = document.getElementById('fileName');
+    const icon = document.getElementById('uploadIcon');
+    if (input.files && input.files.length > 0) {
+      label.innerHTML = `<strong>Archivo seleccionado:</strong> ${input.files[0].name}`;
+      label.classList.remove('text-gray-300');
+      label.classList.add('text-olive-400');
+      icon.className = "fas fa-file-excel text-green-500 text-3xl";
+    } else {
+      label.textContent = "Arrastra aquí tu archivo o haz clic para buscarlo";
+      label.classList.remove('text-olive-400');
+      label.classList.add('text-gray-300');
+      icon.className = "fas fa-cloud-upload-alt text-olive-500 text-3xl";
+    }
+  }
+</script>
+{% endblock %}

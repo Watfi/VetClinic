@@ -632,3 +632,109 @@ def historial_precios_pdf(request, producto_id):
     resp = HttpResponse(buf.getvalue(), content_type="application/pdf")
     resp["Content-Disposition"] = f'inline; filename="historial_precios_{producto.sku}.pdf"'
     return resp
+
+
+@module_required("inventario")
+def import_productos_excel(request):
+    """Import or update products from an uploaded Excel (.xlsx) file."""
+    if request.method == "POST":
+        excel_file = request.FILES.get("archivo")
+        if not excel_file:
+            messages.error(request, "Por favor, selecciona un archivo.")
+            return redirect("import_productos_excel")
+
+        if not excel_file.name.endswith((".xlsx", ".xls")):
+            messages.error(request, "El archivo debe ser de formato Excel (.xlsx).")
+            return redirect("import_productos_excel")
+
+        import openpyxl
+        from decimal import Decimal
+        from home.models import Categoria, Producto
+
+        try:
+            wb = openpyxl.load_workbook(excel_file, read_only=True, data_only=True)
+            sheet = wb.active
+
+            created_count = 0
+            updated_count = 0
+
+            # Iterate rows starting from row 2 (row 1 is header)
+            for r_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), 2):
+                if not row or len(row) < 2:
+                    continue
+
+                sku = str(row[0] or "").strip()
+                nombre = str(row[1] or "").strip()
+
+                if not sku or not nombre:
+                    # Skip rows without SKU or Name
+                    continue
+
+                # Category
+                cat_name = str(row[2] or "").strip()
+                cat_obj = None
+                if cat_name:
+                    cat_obj, _ = Categoria.objects.get_or_create(nombre=cat_name)
+
+                # Try numeric parsing safely
+                def _to_decimal(val):
+                    try:
+                        return Decimal(str(val or 0).replace(",", "."))
+                    except Exception:
+                        return Decimal(0)
+
+                def _to_int(val):
+                    try:
+                        return int(float(str(val or 0)))
+                    except Exception:
+                        return 0
+
+                precio_compra = _to_decimal(row[3])
+                precio = _to_decimal(row[4])
+                stock = _to_int(row[5])
+                stock_minimo = _to_int(row[6])
+                descripcion = str(row[7] or "").strip()
+
+                prod, created = Producto.objects.get_or_create(
+                    sku=sku,
+                    defaults={
+                        "nombre": nombre,
+                        "categoria": cat_obj,
+                        "precio_compra": precio_compra,
+                        "precio": precio,
+                        "stock": stock,
+                        "stock_minimo": stock_minimo,
+                        "descripcion": descripcion,
+                        "activo": True,
+                    }
+                )
+
+                if not created:
+                    # Update existing product
+                    prod.nombre = nombre
+                    prod.categoria = cat_obj
+                    prod.precio_compra = precio_compra
+                    prod.precio = precio
+                    prod.stock = stock
+                    prod.stock_minimo = stock_minimo
+                    prod.descripcion = descripcion
+                    prod.save()
+                    updated_count += 1
+                else:
+                    created_count += 1
+
+            messages.success(
+                request,
+                f"Importación exitosa. Se crearon {created_count} productos y se actualizaron {updated_count} productos."
+            )
+            return redirect("list_productos")
+
+        except Exception as e:
+            messages.error(request, f"Error al procesar el archivo Excel: {e}")
+            return redirect("import_productos_excel")
+
+    return render(request, "productos_import.html", {
+        "username": request.session.get("user"),
+        "rol": request.session.get("rol"),
+    })
+

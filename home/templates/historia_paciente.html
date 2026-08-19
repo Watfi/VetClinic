@@ -2339,6 +2339,8 @@
                     <p class="text-gray-400 text-xs mt-0.5">{{ r.fecha }}</p>
                   </div>
                   <div class="flex gap-2">
+                    <a href="{% url 'remision_pdf' id=r.id %}" target="_blank"
+                       class="text-gray-400 hover:text-white text-sm" title="PDF"><i class="fas fa-file-pdf"></i></a>
                     <button type="button" onclick="openEditRemision({{ r.id }}, '{{ r.fecha }}', '{{ r.clinica_destino|escapejs }}', '{{ r.motivo|escapejs }}', '{{ r.diagnostico|escapejs }}', '{{ r.observaciones|escapejs }}', '{{ r.veterinario_id|default:"" }}')"
                             class="text-olive-400 hover:text-olive-300 text-sm" title="Editar"><i class="fas fa-edit"></i></button>
                     <a href="{% url 'delete_remision' id=r.id %}" onclick="return confirm('¿Eliminar remisión?')"

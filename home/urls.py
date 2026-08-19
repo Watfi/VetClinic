@@ -64,6 +64,7 @@ urlpatterns = [
     path("patients/documentos/<str:id>/edit/", views.edit_documento, name="edit_documento"),
     path("patients/seguimientos/<str:id>/pdf/", views.seguimiento_pdf, name="seguimiento_pdf"),
     path("patients/consultas/<str:id>/pdf/", views.consulta_pdf, name="consulta_pdf"),
+    path("patients/remisiones/<str:id>/pdf/", views.remision_pdf, name="remision_pdf"),
     # Legacy Pacientes CRUD (redirects via views)
     path("patients/legacy/edit/<str:id>/", views.edit_paciente, name="edit_paciente"),
     path("patients/legacy/delete/<str:id>/", views.delete_paciente, name="delete_paciente"),
@@ -110,6 +111,7 @@ urlpatterns = [
     # Inventario - productos
     path("productos/", views.list_productos, name="list_productos"),
     path("productos/add/", views.add_producto, name="add_producto"),
+    path("productos/importar/", views.import_productos_excel, name="import_productos_excel"),
     path("productos/edit/<str:id>/", views.edit_producto, name="edit_producto"),
     path("productos/delete/<str:id>/", views.delete_producto, name="delete_producto"),
     path("productos/<str:producto_id>/movimientos/", views.list_movimientos, name="list_movimientos"),

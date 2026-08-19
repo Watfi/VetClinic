@@ -34,7 +34,7 @@ def superadmin_required(view_func):
             return redirect("login")
         if rol != Usuario.ROL_SUPERADMIN:
             messages.error(request, "Acceso restringido a superadministradores.")
-            return redirect("dashboard")
+            return redirect("index")
         return view_func(request, *args, **kwargs)
     return _wrapped
 
@@ -49,7 +49,7 @@ def admin_required(view_func):
             return redirect("login")
         if rol not in (Usuario.ROL_ADMIN, Usuario.ROL_SUPERADMIN):
             messages.error(request, "Acceso restringido a administradores.")
-            return redirect("dashboard")
+            return redirect("index")
         return view_func(request, *args, **kwargs)
     return _wrapped
 
@@ -88,7 +88,7 @@ def module_required(modulo):
                 return redirect("login")
             if not has_module(request, modulo):
                 messages.error(request, "No tienes acceso a este módulo.")
-                return redirect("dashboard")
+                return redirect("index")
             return view_func(request, *args, **kwargs)
         return _wrapped
     return decorator
@@ -104,7 +104,7 @@ def vet_or_admin_required(view_func):
             return redirect("login")
         if rol not in (Usuario.ROL_SUPERADMIN, Usuario.ROL_ADMIN, Usuario.ROL_VET):
             messages.error(request, "Acceso restringido a veterinarios y administradores.")
-            return redirect("dashboard")
+            return redirect("index")
         return view_func(request, *args, **kwargs)
     return _wrapped
 
@@ -120,7 +120,7 @@ def peluquero_or_above(view_func):
         if rol == Usuario.ROL_ADMIN:
             if not has_module(request, "citas"):
                 messages.error(request, "No tienes acceso a este módulo.")
-                return redirect("dashboard")
+                return redirect("index")
         elif rol not in (Usuario.ROL_SUPERADMIN, Usuario.ROL_VET, Usuario.ROL_PELUQUERO):
             messages.error(request, "Acceso denegado.")
             return redirect("login")

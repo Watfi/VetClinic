@@ -3327,3 +3327,167 @@ def seguimiento_pdf(request, id):
     resp = HttpResponse(buf.getvalue(), content_type="application/pdf")
     resp["Content-Disposition"] = f'inline; filename="seguimiento_{s_obj.id}.pdf"'
     return resp
+
+
+@vet_or_admin_required
+def remision_pdf(request, id):
+    """Genera un PDF con encabezado clínico para una Remisión."""
+    from reportlab.lib.pagesizes import LETTER
+    from reportlab.lib import colors
+    from reportlab.lib.units import cm
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+        HRFlowable, Image as RLImage,
+    )
+
+    r_obj = Remision.objects.select_related(
+        "paciente", "paciente__propietario", "veterinario"
+    ).filter(pk=id).first()
+    if not r_obj:
+        messages.error(request, "Remisión no encontrada.")
+        return redirect("list_pacientes")
+
+    paciente = r_obj.paciente
+    propietario = paciente.propietario if paciente else None
+
+    buf = io.BytesIO()
+    pdf = SimpleDocTemplate(buf, pagesize=LETTER,
+                            leftMargin=2*cm, rightMargin=2*cm,
+                            topMargin=1.5*cm, bottomMargin=2*cm)
+    styles = getSampleStyleSheet()
+    centered = ParagraphStyle("c", parent=styles["Normal"], alignment=TA_CENTER)
+    bold_c = ParagraphStyle("bc", parent=centered, fontName="Helvetica-Bold")
+    small_c = ParagraphStyle("sc", parent=styles["Normal"], fontSize=8,
+                             textColor=colors.grey, alignment=TA_CENTER)
+    label_s = ParagraphStyle("lb", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=9)
+    value_s = ParagraphStyle("vl", parent=styles["Normal"], fontSize=9)
+    sec_title = ParagraphStyle("st", parent=styles["Normal"], fontName="Helvetica-Bold",
+                               fontSize=11, textColor=colors.HexColor("#3a6b35"))
+
+    story = []
+
+    biz_name = getattr(settings, "BUSINESS_NAME", "Kane Agropet")
+    biz_nit = getattr(settings, "BUSINESS_NIT", "")
+    biz_phone = getattr(settings, "BUSINESS_PHONE", "")
+    biz_address = getattr(settings, "BUSINESS_ADDRESS", "")
+    biz_email = getattr(settings, "BUSINESS_EMAIL", "")
+
+    logo_path = next((p for p in [os.path.join(settings.BASE_DIR, "home", "static", "LogoKane.png"), os.path.join(settings.BASE_DIR, "home", "static", "LogoKane.jpeg")] if os.path.exists(p)), "")
+    logo_cell = Paragraph("", styles["Normal"])
+    if os.path.exists(logo_path):
+        try:
+            logo_cell = RLImage(logo_path, width=2.5*cm, height=2.5*cm)
+        except Exception:
+            pass
+
+    clinic_lines = [
+        Paragraph(f"<b>{biz_name}</b>", bold_c),
+        Paragraph(biz_nit, small_c) if biz_nit else Spacer(1, 0.1*cm),
+        Paragraph(biz_address, small_c) if biz_address else Spacer(1, 0.1*cm),
+        Paragraph(f"{biz_phone}{' · ' + biz_email if biz_email else ''}", small_c),
+    ]
+    right_lines = [
+        Paragraph("<b>Remisión Médica</b>", bold_c),
+        Paragraph(f"No. {r_obj.id:07d}", bold_c),
+        Paragraph(f"<font color='#3a6b35'>{r_obj.fecha.strftime('%Y-%m-%d') if r_obj.fecha else ''}</font>", centered),
+    ]
+    hdr = Table([[logo_cell, clinic_lines, right_lines]], colWidths=[3*cm, 11*cm, 4*cm])
+    hdr.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ALIGN", (0, 0), (-1, 0), "CENTER"),
+        ("LINEBELOW", (0, 0), (-1, 0), 1.5, colors.HexColor("#3a6b35")),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
+    ]))
+    story.append(hdr)
+    story.append(Spacer(1, 0.25*cm))
+    story.append(Paragraph("<i>Reservado al tratamiento de animales</i>",
+                           ParagraphStyle("ic", parent=styles["Normal"],
+                                          alignment=TA_CENTER, fontSize=9, textColor=colors.grey)))
+    story.append(Spacer(1, 0.4*cm))
+
+    # Propietario
+    story.append(Paragraph("Propietario", sec_title))
+    story.append(Spacer(1, 0.15*cm))
+    prop_nombre = propietario.nombre if propietario else "—"
+    prop_doc = f"{propietario.tipo_documento}: {propietario.numero_documento}" if propietario and propietario.numero_documento else "—"
+    prop_tel = propietario.telefono if propietario else "—"
+    prop_tbl = Table(
+        [[Paragraph("<b>Nombre:</b>", label_s), Paragraph(prop_nombre, value_s),
+          Paragraph("<b>ID:</b>", label_s), Paragraph(prop_doc, value_s),
+          Paragraph("<b>Tel:</b>", label_s), Paragraph(prop_tel, value_s)]],
+        colWidths=[2.5*cm, 4.5*cm, 1.5*cm, 4*cm, 1.5*cm, 3.8*cm],
+    )
+    prop_tbl.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#dddddd")),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8faf6")),
+        ("FONTSIZE", (0, 0), (-1, -1), 9),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+    ]))
+    story.append(prop_tbl)
+    story.append(Spacer(1, 0.3*cm))
+
+    # Paciente
+    story.append(Paragraph(
+        f"Paciente: <font color='#3a6b35'><b>{paciente.nombre or '—'}</b></font> — {paciente.especie or ''} / {paciente.raza or ''}",
+        sec_title))
+    story.append(Spacer(1, 0.4*cm))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#3a6b35")))
+    story.append(Spacer(1, 0.4*cm))
+
+    vet_name = (r_obj.veterinario.nombre or r_obj.veterinario.user) if r_obj.veterinario else "—"
+    vet_lic_s = r_obj.veterinario.license if r_obj.veterinario and r_obj.veterinario.license else ""
+    vet_esp_s = r_obj.veterinario.especialidad if r_obj.veterinario and r_obj.veterinario.especialidad else ""
+    story.append(Paragraph("<b>Detalles de la Remisión</b>",
+                           ParagraphStyle("title3", parent=styles["Normal"],
+                                          fontName="Helvetica-Bold", fontSize=13, alignment=TA_CENTER)))
+    story.append(Spacer(1, 0.3*cm))
+
+    detail_rows_s = [
+        [Paragraph("<b>Fecha:</b>", label_s), Paragraph(str(r_obj.fecha or "—"), value_s),
+         Paragraph("<b>Clínica Destino:</b>", label_s), Paragraph(r_obj.clinica_destino or "—", value_s),
+         Paragraph("<b>Veterinario:</b>", label_s), Paragraph(vet_name, value_s)],
+    ]
+    if vet_lic_s or vet_esp_s:
+        detail_rows_s.append([
+            Paragraph("<b>Especialidad:</b>", label_s), Paragraph(vet_esp_s or "—", value_s),
+            Paragraph("<b>Lic. Profesional:</b>", label_s), Paragraph(vet_lic_s or "—", value_s),
+            "", "",
+        ])
+    detail_tbl = Table(detail_rows_s, colWidths=[2.5*cm, 3.5*cm, 2.8*cm, 3.2*cm, 2.8*cm, 3.2*cm],
+    )
+    detail_tbl.setStyle(TableStyle([
+        ("FONTSIZE", (0, 0), (-1, -1), 9),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#dddddd")),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8faf6")),
+    ]))
+    story.append(detail_tbl)
+    story.append(Spacer(1, 0.4*cm))
+
+    for label, val in [
+        ("Motivo de Remisión", r_obj.motivo),
+        ("Diagnóstico Presuntivo", r_obj.diagnostico),
+        ("Observaciones adicionales", r_obj.observaciones),
+    ]:
+        if val:
+            story.append(Paragraph(f"<b>{label}:</b>", label_s))
+            story.append(Paragraph(val, value_s))
+            story.append(Spacer(1, 0.3*cm))
+
+    story.append(Spacer(1, 1.5*cm))
+    story.append(HRFlowable(width=8*cm, thickness=0.5, color=colors.black,
+                            spaceAfter=0.1*cm, hAlign="LEFT"))
+    story.append(Paragraph(f"<b>{vet_name}</b>", value_s))
+    story.append(Paragraph("Veterinario remitente",
+                           ParagraphStyle("small3", parent=styles["Normal"],
+                                          fontSize=8, textColor=colors.grey)))
+
+    pdf.build(story)
+    resp = HttpResponse(buf.getvalue(), content_type="application/pdf")
+    resp["Content-Disposition"] = f'inline; filename="remision_{r_obj.id}.pdf"'
+    return resp

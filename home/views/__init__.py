@@ -26,7 +26,7 @@ from .propietarios import (  # noqa: F401
     edit_vacuna, edit_desparasitacion, edit_cirugia, edit_examen,
     edit_seguimiento, edit_orden, edit_remision, edit_peluqueria,
     # PDF views
-    cirugia_pdf, examen_pdf, seguimiento_pdf, vacuna_pdf, desparasitacion_pdf,
+    cirugia_pdf, examen_pdf, seguimiento_pdf, vacuna_pdf, desparasitacion_pdf, remision_pdf,
     # Additional edit views
     edit_imagen, edit_documento,
 )
@@ -49,6 +49,7 @@ from .inventario import (  # noqa: F401
     list_categorias, add_categoria, edit_categoria, delete_categoria,
     list_productos, add_producto, edit_producto, delete_producto,
     list_movimientos, add_entrada, add_salida, toggle_descuento, entrada_pdf, historial_precios_pdf,
+    import_productos_excel,
 )
 from .ventas import (  # noqa: F401
     list_ventas, add_venta, view_venta, edit_venta, delete_venta,
